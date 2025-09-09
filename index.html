@@ -1,0 +1,773 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Manage and track activities with real-time updates">
+    <title>Activities List</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.9/dist/flatpickr.min.css" rel="stylesheet">
+    <link href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.9/dist/flatpickr.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #fff;
+            --text-color: #333;
+            --table-bg: #fff;
+            --table-border: #dee2e6;
+            --btn-primary-bg: #5A2D84;
+        }
+        [data-theme="dark"] {
+            --bg-color: #222;
+            --text-color: #ddd;
+            --table-bg: #333;
+            --table-border: #555;
+            --btn-primary-bg: #7a4aa3;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s;
+        }
+        .table {
+            background-color: var(--table-bg);
+            border-color: var(--table-border);
+        }
+        .table th, .table td {
+            vertical-align: middle;
+        }
+        .table th {
+            cursor: pointer;
+            position: relative;
+        }
+        .table th.sort-asc::after {
+            content: ' ↑';
+        }
+        .table th.sort-desc::after {
+            content: ' ↓';
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+        .editable:hover {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: var(--bg-color);
+            padding: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .spinner {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--btn-primary-bg);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        .session-warning {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+        }
+        @media (max-width: 768px) {
+            .table {
+                display: block;
+            }
+            thead {
+                display: none;
+            }
+            tr {
+                display: block;
+                margin-bottom: 1em;
+                border-bottom: 1px solid var(--table-border);
+            }
+            td {
+                display: block;
+                text-align: left;
+                padding-left: 50%;
+                position: relative;
+            }
+            td:before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                width: 45%;
+                font-weight: bold;
+            }
+            .actions {
+                display: flex;
+                justify-content: space-around;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="spinner" id="spinner"></div>
+<div class="alert alert-warning session-warning" role="alert">
+    Your session will expire in 1 minute. <button id="extendSession" class="btn btn-sm btn-primary">Extend</button>
+</div>
+<div class="container">
+    <nav class="navbar">
+        <div class="mb-4">
+            <a href="/add" class="btn btn-primary" style="background-color: var(--btn-primary-bg)">Add New Activity</a>
+            <a href="/confirmExit" class="btn btn-danger">Exit</a>
+            <button id="bulkDelete" class="btn btn-danger">Delete Selected</button>
+            <a th:href="@{/export(search=${search},state=${state},category=${category},dateRange=${dateRange},sortBy=${sortBy},sortDir=${sortDir})}" id="exportCsv" class="btn btn-success">Export to CSV</a>
+            <button id="toggleDarkMode" class="btn btn-secondary">Toggle Dark Mode</button>
+            <button id="toggleColumns" class="btn btn-secondary" data-toggle="modal" data-target="#columnModal">Columns</button>
+            <button id="toggleAnalytics" class="btn btn-secondary">Simple Analytics</button>
+        </div>
+    </nav>
+    <h1 class="text-center mt-4" style="font-family: 'Arial', sans-serif; font-size: 40px; color: var(--btn-primary-bg); font-weight: bold; text-shadow: 2px 2px 5px rgba(0,0,0,0.3);">Activities List</h1>
+
+    <!-- Analytics Dashboard -->
+    <div id="analytics-section" class="row mb-4" style="display: none;">
+        <div class="col-md-6">
+            <canvas id="stateChart" height="200"></canvas>
+        </div>
+        <div class="col-md-6">
+            <canvas id="categoryChart" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search by State, Category, or Description" aria-label="Search activities" th:value="${search}">
+        </div>
+        <div class="col-md-3">
+            <select id="stateFilter" class="form-control" multiple aria-label="Filter by State" th:value="${state}">
+                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                <option value="Telangana">Telangana</option>
+                <option value="Karnataka">Karnataka</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select id="categoryFilter" class="form-control" multiple aria-label="Filter by Event Category" th:value="${category}">
+                <option value="Integrity Pledge">Integrity Pledge</option>
+                <option value="Vendors Meet">Vendors Meet</option>
+                <option value="Elocution">Elocution</option>
+                <option value="Debate">Debate</option>
+                <option value="Drawing">Drawing</option>
+                <option value="Quiz">Quiz</option>
+                <option value="Slogan">Slogan</option>
+            </select>
+        </div>
+        <div class="col-md-3 mt-2">
+            <input id="dateRangeFilter" class="form-control" placeholder="Filter by Date Range" aria-label="Filter by Event Date" th:value="${dateRange}">
+        </div>
+    </div>
+
+    <!-- Column Selection Modal -->
+    <div class="modal fade" id="columnModal" tabindex="-1" role="dialog" aria-labelledby="columnModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="columnModalLabel">Select Columns</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-check">
+                        <input class="form-check-input column-toggle" type="checkbox" value="state" id="colState" checked>
+                        <label class="form-check-label" for="colState">State</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input column-toggle" type="checkbox" value="stationName" id="colStationName" checked>
+                        <label class="form-check-label" for="colStationName">Station Name</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input column-toggle" type="checkbox" value="activityType" id="colActivityType" checked>
+                        <label class="form-check-label" for="colActivityType">Activity Type</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input column-toggle" type="checkbox" value="eventCategory" id="colEventCategory" checked>
+                        <label class="form-check-label" for="colEventCategory">Event Category</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input column-toggle" type="checkbox" value="participantCategory" id="colParticipantCategory" checked>
+                        <label class="form-check-label" for="colParticipantCategory">Participant Category</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input column-toggle" type="checkbox" value="eventDescription" id="colEventDescription" checked>
+                        <label class="form-check-label" for="colEventDescription">Event Description</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input column-toggle" type="checkbox" value="schoolOrCollegeOrPanchayatName" id="colSchool" checked>
+                        <label class="form-check-label" for="colSchool">School/College/Panchayat Name</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input column-toggle" type="checkbox" value="eventLocation" id="colEventLocation" checked>
+                        <label class="form-check-label" for="colEventLocation">Event Location</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input column-toggle" type="checkbox" value="eventDate" id="colEventDate" checked>
+                        <label class="form-check-label" for="colEventDate">Event Date</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input column-toggle" type="checkbox" value="numberOfParticipants" id="colParticipants" checked>
+                        <label class="form-check-label" for="colParticipants">Number of Participants</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input column-toggle" type="checkbox" value="remarks" id="colRemarks" checked>
+                        <label class="form-check-label" for="colRemarks">Remarks</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveColumns">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Table -->
+    <table class="table table-bordered table-striped" role="grid" aria-labelledby="activityTableDesc">
+        <caption id="activityTableDesc" class="sr-only">List of activities with details and actions</caption>
+        <thead>
+            <tr>
+                <th scope="col" role="columnheader"><input type="checkbox" id="selectAll" aria-label="Select all activities"></th>
+                <th scope="col" data-sort="id" role="columnheader" aria-sort="none">ID</th>
+                <th scope="col" data-sort="state" data-col="state" role="columnheader" aria-sort="none">State</th>
+                <th scope="col" data-sort="stationName" data-col="stationName" role="columnheader" aria-sort="none">Station Name</th>
+                <th scope="col" data-sort="activityType" data-col="activityType" role="columnheader" aria-sort="none">Activity Type</th>
+                <th scope="col" data-sort="eventCategory" data-col="eventCategory" role="columnheader" aria-sort="none">Event Category</th>
+                <th scope="col" data-sort="participantCategory" data-col="participantCategory" role="columnheader" aria-sort="none">Participant Category</th>
+                <th scope="col" data-sort="eventDescription" data-col="eventDescription" role="columnheader" aria-sort="none">Event Description</th>
+                <th scope="col" data-sort="schoolOrCollegeOrPanchayatName" data-col="schoolOrCollegeOrPanchayatName" role="columnheader" aria-sort="none">School/College/Panchayat Name</th>
+                <th scope="col" data-sort="eventLocation" data-col="eventLocation" role="columnheader" aria-sort="none">Event Location</th>
+                <th scope="col" data-sort="eventDate" data-col="eventDate" role="columnheader" aria-sort="none">Event Date</th>
+                <th scope="col" data-sort="numberOfParticipants" data-col="numberOfParticipants" role="columnheader" aria-sort="none">Number of Participants</th>
+                <th scope="col" data-sort="remarks" data-col="remarks" role="columnheader" aria-sort="none">Remarks</th>
+                <th scope="col" role="columnheader" class="actions">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="activityTable" data-sort-order="asc">
+            <tr th:each="activity : ${activities}">
+                <td data-label="Select"><input type="checkbox" class="selectRow" th:value="${activity.id}" aria-label="Select activity"></td>
+                <td data-label="ID" th:text="${activity.id}" scope="row" class="activity-id"></td>
+                <td data-label="State" contenteditable="true" class="editable" data-field="state" th:text="${activity.state}"></td>
+                <td data-label="Station Name" contenteditable="true" class="editable" data-field="stationName" th:text="${activity.stationName}"></td>
+                <td data-label="Activity Type" contenteditable="true" class="editable" data-field="activityType" th:text="${activity.activityType}"></td>
+                <td data-label="Event Category" contenteditable="true" class="editable" data-field="eventCategory" th:text="${activity.eventCategory}"></td>
+                <td data-label="Participant Category" contenteditable="true" class="editable" data-field="participantCategory" th:text="${activity.participantCategory}"></td>
+                <td data-label="Event Description" contenteditable="true" class="editable" data-field="eventDescription" th:utext="${activity.eventDescription}"></td>
+                <td data-label="School/College/Panchayat Name" contenteditable="true" class="editable" data-field="schoolOrCollegeOrPanchayatName" th:text="${activity.schoolOrCollegeOrPanchayatName}"></td>
+                <td data-label="Event Location" contenteditable="true" class="editable" data-field="eventLocation" th:text="${activity.eventLocation}"></td>
+                <td data-label="Event Date" contenteditable="true" class="editable" data-field="eventDate" th:text="${activity.eventDate}"></td>
+                <td data-label="Number of Participants" contenteditable="true" class="editable" data-field="numberOfParticipants" th:text="${activity.numberOfParticipants}"></td>
+                <td data-label="Remarks" contenteditable="true" class="editable" data-field="remarks" th:utext="${activity.remarks}"></td>
+                <td data-label="Actions" class="actions">
+                    <button class="btn btn-sm btn-success save-row" th:attr="data-id=${activity.id}" aria-label="Save changes for activity ${activity.id}">Save</button>
+                    <a th:href="@{/update/{id}(id=${activity.id})}" class="btn btn-sm btn-warning" aria-label="Edit activity ${activity.id}">Edit</a>
+                    <a th:href="@{/confirmDelete/{id}(id=${activity.id})}" class="btn btn-sm btn-danger" aria-label="Delete activity ${activity.id}">Delete</a>
+                    <a th:if="${@fileMetadataRepository.findByActivityId(activity.id) != null}"
+                       th:href="@{/api/download/{fileId}(fileId=${@fileMetadataRepository.findByActivityId(activity.id).id})}"
+                       class="btn btn-sm btn-success" aria-label="Download file for activity ${activity.id}">Download</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                    <a class="page-link" th:href="@{/(page=${currentPage - 1},size=${size},search=${search},state=${state},category=${category},dateRange=${dateRange},sortBy=${sortBy},sortDir=${sortDir})}" aria-label="Previous page">Previous</a>
+                </li>
+                <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${i == currentPage} ? 'active'">
+                    <a class="page-link" th:href="@{/(page=${i},size=${size},search=${search},state=${state},category=${category},dateRange=${dateRange},sortBy=${sortBy},sortDir=${sortDir})}" th:text="${i + 1}" th:attr="aria-label='Page ' + ${i + 1}"></a>
+                </li>
+                <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                    <a class="page-link" th:href="@{/(page=${currentPage + 1},size=${size},search=${search},state=${state},category=${category},dateRange=${dateRange},sortBy=${sortBy},sortDir=${sortDir})}" aria-label="Next page">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.bundle.min.js" integrity="sha384-pjaaA8dDz/5BgdFUPX6M/9SUZv4d12SUPF0axWc+VRZkx5xU3daN+lYb49+Ax+Tl" crossorigin="anonymous"></script>
+<script>
+    // Initialize theme from localStorage
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+    }
+
+    // Toggle Dark Mode
+    document.getElementById('toggleDarkMode').addEventListener('click', () => {
+        const body = document.body;
+        const theme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        body.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    });
+
+    // Show Spinner
+    function showSpinner() {
+        document.getElementById('spinner').style.display = 'block';
+    }
+    function hideSpinner() {
+        document.getElementById('spinner').style.display = 'none';
+    }
+
+    // Search Autocomplete
+    $('#searchInput').autocomplete({
+        source: function(request, response) {
+            $.ajax({
+                url: '/activities/search-suggestions',
+                data: { term: request.term },
+                dataType: 'json',
+                beforeSend: showSpinner,
+                success: function(data) {
+                    response(data);
+                },
+                complete: hideSpinner
+            });
+        },
+        minLength: 2
+    });
+
+    // Initialize Select2 for Multi-Select Filters
+    $('#stateFilter, #categoryFilter').select2({
+        placeholder: 'Select options',
+        allowClear: true
+    });
+
+    // Initialize Flatpickr for Date Range Filter
+    flatpickr('#dateRangeFilter', {
+        mode: 'range',
+        dateFormat: 'Y-m-d',
+        onChange: updateUrl
+    });
+
+    // Search and Filter Functionality
+    const searchInput = document.getElementById('searchInput');
+    const stateFilter = document.getElementById('stateFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const dateRangeFilter = document.getElementById('dateRangeFilter');
+
+    function updateUrl() {
+        showSpinner();
+        const params = new URLSearchParams({
+            search: searchInput.value,
+            state: $(stateFilter).val()?.join(',') || '',
+            category: $(categoryFilter).val()?.join(',') || '',
+            dateRange: dateRangeFilter.value,
+            page: '[[${currentPage}]]',
+            size: '[[${size}]]',
+            sortBy: '[[${sortBy}]]',
+            sortDir: '[[${sortDir}]]'
+        });
+        window.location.href = '/?' + params.toString();
+    }
+
+    searchInput.addEventListener('change', updateUrl);
+    $(stateFilter).on('change', updateUrl);
+    $(categoryFilter).on('change', updateUrl);
+
+    // Sorting Table Columns with Indicators
+    document.querySelectorAll('th[data-sort]').forEach((th) => {
+        th.addEventListener('click', () => {
+            const sortBy = th.dataset.sort;
+            const currentSortDir = '[[${sortDir}]]';
+            const newSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+            document.querySelectorAll('th[data-sort]').forEach(t => {
+                t.classList.remove('sort-asc', 'sort-desc');
+                t.setAttribute('aria-sort', 'none');
+            });
+            th.classList.add(`sort-${newSortDir}`);
+            th.setAttribute('aria-sort', newSortDir);
+            const params = new URLSearchParams({
+                search: '[[${search}]]',
+                state: '[[${state}]]',
+                category: '[[${category}]]',
+                dateRange: '[[${dateRange}]]',
+                page: '[[${currentPage}]]',
+                size: '[[${size}]]',
+                sortBy: sortBy,
+                sortDir: newSortDir
+            });
+            showSpinner();
+            window.location.href = '/?' + params.toString();
+        });
+    });
+
+    // Initialize Sort Indicators
+    const currentSortBy = '[[${sortBy}]]';
+    const currentSortDir = '[[${sortDir}]]';
+    const currentSortTh = document.querySelector(`th[data-sort="${currentSortBy}"]`);
+    if (currentSortTh) {
+        currentSortTh.classList.add(`sort-${currentSortDir}`);
+        currentSortTh.setAttribute('aria-sort', currentSortDir);
+    }
+
+    // Toggle Analytics
+    let stateChartInstance = null;
+    let categoryChartInstance = null;
+    let analyticsVisible = false;
+
+    function toggleAnalytics() {
+        const analyticsSection = document.getElementById('analytics-section');
+        analyticsVisible = !analyticsVisible;
+        analyticsSection.style.display = analyticsVisible ? 'block' : 'none';
+        if (analyticsVisible) {
+            loadAnalytics();
+        } else {
+            if (stateChartInstance) {
+                stateChartInstance.destroy();
+                stateChartInstance = null;
+            }
+            if (categoryChartInstance) {
+                categoryChartInstance.destroy();
+                categoryChartInstance = null;
+            }
+        }
+    }
+
+    function loadAnalytics() {
+        fetch('/activities/stats').then(response => response.json()).then(data => {
+            if (!analyticsVisible) return;
+            stateChartInstance = new Chart(document.getElementById('stateChart'), {
+                type: 'bar',
+                data: {
+                    labels: data.stateLabels || ['Andhra Pradesh', 'Telangana', 'Karnataka'],
+                    datasets: [{
+                        label: 'Activities by State',
+                        data: data.stateValues || [0, 0, 0],
+                        backgroundColor: ['#5A2D84', '#28a745', '#dc3545']
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: true } } }
+            });
+            categoryChartInstance = new Chart(document.getElementById('categoryChart'), {
+                type: 'pie',
+                data: {
+                    labels: data.categoryLabels || ['Integrity Pledge', 'Vendors Meet', 'Elocution', 'Debate', 'Drawing', 'Quiz', 'Slogan'],
+                    datasets: [{
+                        label: 'Activities by Category',
+                        data: data.categoryValues || [0, 0, 0, 0, 0, 0, 0],
+                        backgroundColor: ['#5A2D84', '#28a745', '#dc3545', '#ffc107', '#17a2b8', '#6c757d', '#fd7e14']
+                    }]
+                }
+            });
+        }).catch(error => console.error('Failed to load stats:', error));
+    }
+
+    document.getElementById('toggleAnalytics').addEventListener('click', toggleAnalytics);
+
+    // Real-Time Data Updates with Server-Sent Events
+    function connectSSE(retryCount = 0, maxRetries = 5) {
+        if (retryCount >= maxRetries) {
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-danger';
+            alert.textContent = 'Lost connection to real-time updates. Please refresh the page.';
+            document.querySelector('.container').prepend(alert);
+            return;
+        }
+        const eventSource = new EventSource('/activities/updates');
+        eventSource.onmessage = function(event) {
+            showSpinner();
+            const update = JSON.parse(event.data);
+            if (update.action === 'HEARTBEAT') {
+                console.debug('Received SSE heartbeat');
+                hideSpinner();
+                return;
+            }
+            const tbody = document.getElementById('activityTable');
+            if (update.action === 'ADD' || update.action === 'UPDATE') {
+                const activity = update.activity;
+                const row = tbody.querySelector(`tr td.activity-id[textContent="${activity.id}"]`)?.parentElement;
+                if (row && update.action === 'UPDATE') {
+                    row.cells[2].textContent = activity.state || '';
+                    row.cells[3].textContent = activity.stationName || '';
+                    row.cells[4].textContent = activity.activityType || '';
+                    row.cells[5].textContent = activity.eventCategory || '';
+                    row.cells[6].textContent = activity.participantCategory || '';
+                    row.cells[7].innerHTML = activity.eventDescription || '';
+                    row.cells[8].textContent = activity.schoolOrCollegeOrPanchayatName || '';
+                    row.cells[9].textContent = activity.eventLocation || '';
+                    row.cells[10].textContent = activity.eventDate || '';
+                    row.cells[11].textContent = activity.numberOfParticipants || 0;
+                    row.cells[12].innerHTML = activity.remarks || '';
+                    // Update download link visibility
+                    const downloadCell = row.cells[13].querySelector('a.btn-success:not(.save-row)');
+                    if (activity.fileMetadata && downloadCell) {
+                        downloadCell.style.display = '';
+                        downloadCell.href = `/api/download/${activity.fileMetadata.id}`;
+                    } else if (downloadCell) {
+                        downloadCell.style.display = 'none';
+                    }
+                } else if (update.action === 'ADD') {
+                    const newRow = document.createElement('tr');
+                    newRow.innerHTML = `
+                        <td data-label="Select"><input type="checkbox" class="selectRow" value="${activity.id}" aria-label="Select activity"></td>
+                        <td data-label="ID" scope="row" class="activity-id">${activity.id}</td>
+                        <td data-label="State" contenteditable="true" class="editable" data-field="state">${activity.state || ''}</td>
+                        <td data-label="Station Name" contenteditable="true" class="editable" data-field="stationName">${activity.stationName || ''}</td>
+                        <td data-label="Activity Type" contenteditable="true" class="editable" data-field="activityType">${activity.activityType || ''}</td>
+                        <td data-label="Event Category" contenteditable="true" class="editable" data-field="eventCategory">${activity.eventCategory || ''}</td>
+                        <td data-label="Participant Category" contenteditable="true" class="editable" data-field="participantCategory">${activity.participantCategory || ''}</td>
+                        <td data-label="Event Description" contenteditable="true" class="editable" data-field="eventDescription">${activity.eventDescription || ''}</td>
+                        <td data-label="School/College/Panchayat Name" contenteditable="true" class="editable" data-field="schoolOrCollegeOrPanchayatName">${activity.schoolOrCollegeOrPanchayatName || ''}</td>
+                        <td data-label="Event Location" contenteditable="true" class="editable" data-field="eventLocation">${activity.eventLocation || ''}</td>
+                        <td data-label="Event Date" contenteditable="true" class="editable" data-field="eventDate">${activity.eventDate || ''}</td>
+                        <td data-label="Number of Participants" contenteditable="true" class="editable" data-field="numberOfParticipants">${activity.numberOfParticipants || 0}</td>
+                        <td data-label="Remarks" contenteditable="true" class="editable" data-field="remarks">${activity.remarks || ''}</td>
+                        <td data-label="Actions" class="actions">
+                            <button class="btn btn-sm btn-success save-row" data-id="${activity.id}" aria-label="Save changes for activity ${activity.id}">Save</button>
+                            <a href="/update/${activity.id}" class="btn btn-sm btn-warning" aria-label="Edit activity ${activity.id}">Edit</a>
+                            <a href="/confirmDelete/${activity.id}" class="btn btn-sm btn-danger" aria-label="Delete activity ${activity.id}">Delete</a>
+                            ${activity.fileMetadata ? `<a href="/api/download/${activity.fileMetadata.id}" class="btn btn-sm btn-success" aria-label="Download file for activity ${activity.id}">Download</a>` : ''}
+                        </td>
+                    `;
+                    tbody.appendChild(newRow);
+                    bindSaveButtons();
+                    applyColumnVisibility();
+                }
+            } else if (update.action === 'DELETE') {
+                (update.deletedIds || [update.activity.id]).forEach(id => {
+                    const row = tbody.querySelector(`tr td.activity-id[textContent="${id}"]`)?.parentElement;
+                    if (row) row.remove();
+                });
+            }
+            updateUrl();
+            hideSpinner();
+        };
+        eventSource.onerror = function() {
+            console.error(`SSE connection error, retrying (${retryCount + 1}/${maxRetries}) in ${Math.min(1000 * Math.pow(2, retryCount), 30000)}ms...`);
+            eventSource.close();
+            setTimeout(() => connectSSE(retryCount + 1, maxRetries), Math.min(1000 * Math.pow(2, retryCount), 30000));
+        };
+        eventSource.onopen = function() {
+            console.log('SSE connection established');
+            retryCount = 0;
+            hideSpinner();
+        };
+    }
+    connectSSE();
+
+    // Export Data to CSV with Progress Indicator
+    document.getElementById('exportCsv').addEventListener('click', (e) => {
+        e.preventDefault();
+        showSpinner();
+        const feedback = document.createElement('div');
+        feedback.className = 'alert alert-info mt-2';
+        feedback.textContent = 'Exporting...';
+        document.querySelector('.container').prepend(feedback);
+        fetch(document.getElementById('exportCsv').href)
+            .then(response => response.text())
+            .then(csv => {
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'activities.csv';
+                a.click();
+                URL.revokeObjectURL(url);
+                feedback.textContent = 'Export completed!';
+                setTimeout(() => feedback.remove(), 2000);
+                hideSpinner();
+            })
+            .catch(error => {
+                console.error('Export failed:', error);
+                feedback.textContent = 'Export failed!';
+                setTimeout(() => feedback.remove(), 2000);
+                hideSpinner();
+            });
+    });
+
+    // Bulk Actions
+    document.getElementById('selectAll').addEventListener('change', function() {
+        document.querySelectorAll('.selectRow').forEach(cb => cb.checked = this.checked);
+    });
+
+    document.getElementById('bulkDelete').addEventListener('click', () => {
+        const selectedIds = Array.from(document.querySelectorAll('.selectRow:checked')).map(cb => cb.value);
+        if (selectedIds.length === 0) {
+            alert('Please select at least one activity.');
+            return;
+        }
+        if (confirm('Are you sure you want to delete selected activities?')) {
+            showSpinner();
+            fetch('/delete/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(selectedIds)
+            }).then(() => {
+                location.reload();
+                hideSpinner();
+            }).catch(error => {
+                console.error('Bulk delete failed:', error);
+                hideSpinner();
+            });
+        }
+    });
+
+    // Inline Editing
+    function bindSaveButtons() {
+        document.querySelectorAll('.save-row').forEach(button => {
+            button.addEventListener('click', () => {
+                const row = button.closest('tr');
+                const id = button.dataset.id;
+                const data = {
+                    id: id,
+                    state: row.querySelector('[data-field="state"]').textContent,
+                    stationName: row.querySelector('[data-field="stationName"]').textContent,
+                    activityType: row.querySelector('[data-field="activityType"]').textContent,
+                    eventCategory: row.querySelector('[data-field="eventCategory"]').textContent,
+                    participantCategory: row.querySelector('[data-field="participantCategory"]').textContent,
+                    eventDescription: row.querySelector('[data-field="eventDescription"]').innerHTML,
+                    schoolOrCollegeOrPanchayatName: row.querySelector('[data-field="schoolOrCollegeOrPanchayatName"]').textContent,
+                    eventLocation: row.querySelector('[data-field="eventLocation"]').textContent,
+                    eventDate: row.querySelector('[data-field="eventDate"]').textContent,
+                    numberOfParticipants: parseInt(row.querySelector('[data-field="numberOfParticipants"]').textContent) || 0,
+                    remarks: row.querySelector('[data-field="remarks"]').innerHTML
+                };
+                showSpinner();
+                fetch('/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                }).then(response => {
+                    if (response.ok) alert('Activity updated successfully!');
+                    else alert('Failed to update activity.');
+                    hideSpinner();
+                }).catch(error => {
+                    console.error('Inline update failed:', error);
+                    hideSpinner();
+                });
+            });
+        });
+    }
+    bindSaveButtons();
+
+    // Customizable Table Columns
+    function applyColumnVisibility() {
+        const hiddenColumns = JSON.parse(localStorage.getItem('hiddenColumns') || '[]');
+        document.querySelectorAll('th[data-col], td[data-field]').forEach(el => {
+            const col = el.dataset.col || el.dataset.field;
+            el.style.display = hiddenColumns.includes(col) ? 'none' : '';
+        });
+        document.querySelectorAll('tr').forEach(row => {
+            const visibleCells = Array.from(row.cells).filter(cell => cell.style.display !== 'none');
+            if (visibleCells.length <= 2) row.style.display = 'none';
+            else row.style.display = '';
+        });
+    }
+    document.getElementById('saveColumns').addEventListener('click', () => {
+        const hiddenColumns = Array.from(document.querySelectorAll('.column-toggle:not(:checked)')).map(cb => cb.value);
+        localStorage.setItem('hiddenColumns', JSON.stringify(hiddenColumns));
+        applyColumnVisibility();
+        $('#columnModal').modal('hide');
+    });
+    applyColumnVisibility();
+
+    // Session Timeout Warning
+    let timeoutId;
+    function resetSessionTimer() {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            document.querySelector('.session-warning').style.display = 'block';
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 60000);
+        }, 15 * 60 * 1000); // 15 minutes
+    }
+    document.getElementById('extendSession').addEventListener('click', () => {
+        document.querySelector('.session-warning').style.display = 'none';
+        resetSessionTimer();
+        fetch('/extend-session', { method: 'POST' }).catch(error => console.error('Session extension failed:', error));
+    });
+    document.addEventListener('mousemove', resetSessionTimer);
+    document.addEventListener('keydown', resetSessionTimer);
+    resetSessionTimer();
+
+    // Keyboard Navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' && !e.target.isContentEditable) {
+            const prevLink = document.querySelector('.page-item:not(.disabled) .page-link[aria-label="Previous page"]');
+            if (prevLink) prevLink.click();
+        }
+        if (e.key === 'ArrowRight' && !e.target.isContentEditable) {
+            const nextLink = document.querySelector('.page-item:not(.disabled) .page-link[aria-label="Next page"]');
+            if (nextLink) nextLink.click();
+        }
+        if (e.key === 'Enter' && e.target.classList.contains('editable')) {
+            const row = e.target.closest('tr');
+            const saveButton = row.querySelector('.save-row');
+            if (saveButton) saveButton.click();
+        }
+        if (e.key === 'Escape' && e.target.isContentEditable) {
+            e.target.blur();
+        }
+    });
+</script>
+</body>
+</html>
