@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Add new activity for VAW 24">
+    <title>VAW 24 - Add Activity</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.9/dist/flatpickr.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #1f2937;
+            --primary-bg: #3b82f6;
+            --primary-hover: #2563eb;
+        }
+        [data-theme="dark"] {
+            --bg-color: #1f2937;
+            --text-color: #e5e7eb;
+            --primary-bg: #60a5fa;
+            --primary-hover: #3b82f6;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: var(--bg-color);
+            padding: 0.75rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .spinner {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-bg);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        .session-warning {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 2000;
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            padding: 1rem;
+            border-radius: 0.375rem;
+        }
+        .error-message {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--primary-bg);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+        .form-group label {
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        .card {
+            background-color: var(--bg-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: none;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+        .progress-bar {
+            height: 0.5rem;
+            background-color: #e5e7eb;
+            border-radius: 0.25rem;
+            overflow: hidden;
+            transition: width 0.5s ease-in-out;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--primary-bg);
+            transition: width 0.5s ease-in-out;
+        }
+        .image-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .image-preview img {
+            max-width: 100px;
+            border-radius: 0.375rem;
+            object-fit: cover;
+        }
+        .char-count {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6b7280;
+            transition: color 0.3s ease;
+        }
+        .char-count.exceeded {
+            color: #dc2626;
+            font-weight: 600;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 2000;
+        }
+        .modal.show {
+            display: block;
+        }
+        .modal-dialog {
+            max-width: 500px;
+            margin: 1.75rem auto;
+        }
+        .modal-content {
+            background-color: var(--bg-color);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .alert {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .form-control {
+            border-radius: 8px;
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+            border: 1px solid #d1d5db;
+        }
+        .form-control:focus {
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+            border-color: #3b82f6;
+        }
+        .neumorphic {
+            background: #e0e0e0;
+            border-radius: 15px;
+            box-shadow: 5px 5px 15px #bebebe, -5px -5px 15px #ffffff;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-group span {
+            font-size: 0.9em;
+            color: #555;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .ai-suggestion {
+            display: block;
+            font-size: 0.9em;
+            color: #155724;
+            margin-top: 5px;
+        }
+        .error {
+            display: block;
+            font-size: 0.9em;
+            color: #721c24;
+            margin-top: 5px;
+        }
+        .dropzone {
+            border: 2px dashed #d1d5db;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            text-align: center;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+        .dropzone.dragover {
+            border-color: var(--primary-bg);
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        .ql-container {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border-radius: 0.375rem;
+        }
+        [data-theme="dark"] .ql-container {
+            background-color: #374151;
+            color: #e5e7eb;
+        }
+        .ql-toolbar {
+            border-radius: 0.375rem 0.375rem 0 0;
+        }
+        @media (max-width: 640px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .navbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            .grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.9/dist/flatpickr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+</head>
+<body>
+<div class="spinner" id="spinner" role="status" aria-label="Loading"></div>
+<div class="session-warning" id="sessionAlert" role="alert" aria-live="assertive">
+    Your session will expire in <span id="timer">60</span> seconds. 
+    <button id="extendSession" class="btn btn-sm btn-primary px-2 py-1 rounded-md">Extend</button>
+    <button type="button" class="btn-close text-sm font-bold" data-dismiss="modal" aria-label="Close">&times;</button>
+</div>
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <nav class="navbar flex justify-between items-center" role="navigation" aria-label="Main navigation">
+        <div class="flex space-x-4">
+            <a href="/activity" class="btn btn-secondary px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-600" aria-label="Back to Activity List">Back to Activity List</a>
+            <button id="toggleDarkMode" class="btn btn-secondary px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-600" aria-label="Toggle between dark and light mode">Toggle Dark Mode</button>
+        </div>
+    </nav>
+    <h1 class="text-center mt-6 text-3xl font-bold text-gray-900 dark:text-gray-100">VAW 24 - Add Activity</h1>
+    <div class="mt-4 mb-6">
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar-fill" id="progressBar" style="width: 0%;"></div>
+        </div>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Form Completion: <span id="progressText">0%</span></p>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger mb-4 rounded-md p-4" role="alert">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <form id="activityForm" th:object="${activity}" th:action="@{/save}" method="post" enctype="multipart/form-data" class="card">
+        <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <fieldset class="mb-6">
+            <legend class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Event Details</legend>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div class="form-group">
+                    <label for="state" class="block text-sm font-medium">State <span class="text-red-500">*</span></label>
+                    <select id="state" th:field="*{state}" class="form-control w-full px-3 py-2 mt-1" aria-required="true" aria-label="Select State" title="Select the state where the event is held">
+                        <option value="">Select State</option>
+                        <option value="Andhra Pradesh">Andhra Pradesh</option>
+                        <option value="Telangana">Telangana</option>
+                        <option value="Karnataka">Karnataka</option>
+                    </select>
+                    <div class="error-message" id="stateError" aria-live="polite"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                </div>
+                <div class="form-group">
+                    <label for="stationName" class="block text-sm font-medium">Station Name <span class="text-red-500">*</span></label>
+                    <select id="stationName" th:field="*{stationName}" class="form-control w-full px-3 py-2 mt-1" aria-required="true" aria-label="Select Station" title="Select the station hosting the event">
+                        <option value="">Select Station</option>
+                    </select>
+                    <div class="error-message" id="stationNameError" aria-live="polite"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                </div>
+                <div class="form-group">
+                    <label for="activityType" class="block text-sm font-medium">Activity Type <span class="text-red-500">*</span></label>
+                    <select id="activityType" th:field="*{activityType}" class="form-control w-full px-3 py-2 mt-1" aria-required="true" aria-label="Select Activity Type" title="Specify if the activity is in-house or outreach">
+                        <option value="">Select Activity Type</option>
+                        <option value="In House">In House</option>
+                        <option value="Outreach">Outreach</option>
+                    </select>
+                    <div class="error-message" id="activityTypeError" aria-live="polite"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                </div>
+                <div class="form-group">
+                    <label for="eventCategory" class="block text-sm font-medium">Event Category <span class="text-red-500">*</span></label>
+                    <select id="eventCategory" th:field="*{eventCategory}" class="form-control w-full px-3 py-2 mt-1" aria-required="true" aria-label="Select Event Category" title="Choose the type of event">
+                        <option value="">Select Event Category</option>
+                        <option value="Integrity Pledge">Integrity Pledge</option>
+                        <option value="Vendors Meet">Vendors Meet</option>
+                        <option value="Elocution">Elocution</option>
+                        <option value="Debate">Debate</option>
+                        <option value="Drawing">Drawing</option>
+                        <option value="Quiz">Quiz</option>
+                        <option value="Slogan">Slogan</option>
+                    </select>
+                    <div class="error-message" id="eventCategoryError" aria-live="polite"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                </div>
+            </div>
+        </fieldset>
+        <fieldset class="mb-6">
+            <legend class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Location and Participants</legend>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div class="form-group">
+                    <label for="participantCategory" class="block text-sm font-medium">Participant Category <span class="text-red-500">*</span></label>
+                    <select id="participantCategory" th:field="*{participantCategory}" class="form-control w-full px-3 py-2 mt-1" aria-required="true" aria-label="Select Participant Category" title="Select the group participating in the event">
+                        <option value="">Select Participant Category</option>
+                        <option value="Employee">Employee</option>
+                        <option value="Spouse">Spouse</option>
+                        <option value="Children">Children</option>
+                        <option value="Support Staff">Support Staff</option>
+                        <option value="School Students">School Students</option>
+                        <option value="College Students">College Students</option>
+                        <option value="Awareness Programs">Awareness Programs</option>
+                        <option value="Gram Sabha">Gram Sabha</option>
+                    </select>
+                    <div class="error-message" id="participantCategoryError" aria-live="polite"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                </div>
+                <div class="form-group">
+                    <label for="eventDescription" class="block text-sm font-medium">Event Description <span class="text-red-500">*</span> <span id="eventDescriptionCount" class="char-count">0/500</span></label>
+                    <div id="eventDescriptionEditor" class="ql-container"></div>
+                    <input type="hidden" id="eventDescription" th:field="*{eventDescription}" aria-label="Event Description" aria-required="true" title="Describe the event in detail"/>
+                    <div class="error-message" id="eventDescriptionError" aria-live="polite"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                </div>
+                <div class="form-group">
+                    <label for="schoolOrCollegeOrPanchayatName" class="block text-sm font-medium">Name of School/College/Panchayat <span id="schoolOrCollegeOrPanchayatNameCount" class="char-count">0/100</span></label>
+                    <input type="text" id="schoolOrCollegeOrPanchayatName" th:field="*{schoolOrCollegeOrPanchayatName}" class="form-control w-full px-3 py-2 mt-1" maxlength="100" aria-label="Name of School, College, or Panchayat" title="Enter the name of the school, college, or panchayat (if applicable)"/>
+                    <div class="error-message" id="schoolOrCollegeOrPanchayatNameError" aria-live="polite"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                </div>
+                <div class="form-group">
+                    <label for="eventLocation" class="block text-sm font-medium">Event Location <span id="eventLocationCount" class="char-count">0/100</span></label>
+                    <input type="text" id="eventLocation" th:field="*{eventLocation}" class="form-control w-full px-3 py-2 mt-1" maxlength="100" aria-label="Event Location" title="Enter the location where the event will take place"/>
+                    <div class="error-message" id="eventLocationError" aria-live="polite"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                </div>
+                <div class="form-group">
+                    <label for="eventDate" class="block text-sm font-medium">Event Date <span class="text-red-500">*</span></label>
+                    <input type="text" id="eventDate" th:field="*{eventDate}" class="form-control w-full px-3 py-2 mt-1 flatpickr" placeholder="YYYY-MM-DD" aria-label="Event Date" aria-required="true" title="Select the date of the event (Oct 28 - Nov 3, 2024)"/>
+                    <div class="error-message" id="eventDateError" aria-live="polite"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                </div>
+                <div class="form-group">
+                    <label for="numberOfParticipants" class="block text-sm font-medium">Number of Participants <span class="text-red-500">*</span></label>
+                    <input type="number" id="numberOfParticipants" th:field="*{numberOfParticipants}" class="form-control w-full px-3 py-2 mt-1" min="1" max="1000" aria-label="Number of Participants" aria-required="true" title="Enter the number of participants (1-1000)"/>
+                    <div class="error-message" id="numberOfParticipantsError" aria-live="polite"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                </div>
+            </div>
+        </fieldset>
+        <fieldset class="mb-6">
+            <legend class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Additional Information</legend>
+            <div class="form-group">
+                <label for="remarks" class="block text-sm font-medium">Remarks <span id="remarksCount" class="char-count">0/500</span></label>
+                <textarea id="remarks" th:field="*{remarks}" class="form-control w-full px-3 py-2 mt-1" rows="4" maxlength="500" aria-label="Remarks" title="Add any additional notes or remarks"></textarea>
+                <div class="error-message" id="remarksError" aria-live="polite"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+            </div>
+            <div class="form-group">
+                <label for="imageUpload" class="block text-sm font-medium">Upload Images (JPEG, PNG, GIF)</label>
+                <div class="dropzone" id="dropzone">Drag and drop images here or click to upload</div>
+                <input type="file" id="imageUpload" name="files" class="form-control-file w-full px-3 py-2 mt-1 border border-gray-300 rounded-md hidden" multiple accept=".jpg,.jpeg,.png,.gif" aria-label="Upload new images" title="Upload JPEG, PNG, or GIF images"/>
+                <div id="imagePreview" class="image-preview"></div>
+                <div class="error-message" id="imageUploadError" aria-live="polite"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+            </div>
+        </fieldset>
+        <div class="flex justify-center mt-6">
+            <button type="button" class="btn btn-primary px-6 py-3 rounded-md text-white font-medium bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all duration-200" data-toggle="modal" data-target="#confirmModal" aria-label="Save Activity">Save Activity</button>
+        </div>
+    </form>
+
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header p-4 border-b border-gray-200 dark:border-gray-600">
+                    <h5 class="modal-title text-lg font-semibold" id="confirmModalLabel">Confirm Submission</h5>
+                    <button type="button" class="btn-close text-sm font-bold" data-dismiss="modal" aria-label="Close">&times;</button>
+                </div>
+                <div class="modal-body p-4">
+                    Are you sure you want to submit the activity details?
+                </div>
+                <div class="modal-footer p-4 border-t border-gray-200 dark:border-gray-600">
+                    <button type="button" class="btn btn-secondary px-4 py-2 rounded-md" data-dismiss="modal" aria-label="Cancel submission">Cancel</button>
+                    <button type="button" class="btn btn-primary px-4 py-2 rounded-md bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700" id="confirmSubmit" aria-label="Confirm submission">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize theme from localStorage
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+    }
+
+    // Toggle Dark Mode
+    document.getElementById('toggleDarkMode').addEventListener('click', () => {
+        const body = document.body;
+        const theme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        body.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        document.getElementById('toggleDarkMode').textContent = theme === 'dark' ? 'Toggle Light Mode' : 'Toggle Dark Mode';
+    });
+
+    // Show/Hide Spinner
+    function showSpinner() {
+        document.getElementById('spinner').style.display = 'block';
+    }
+    function hideSpinner() {
+        document.getElementById('spinner').style.display = 'none';
+    }
+
+    // Initialize Flatpickr for Event Date
+    flatpickr('#eventDate', {
+        dateFormat: 'Y-m-d',
+        minDate: '2024-10-28',
+        maxDate: '2024-11-03'
+    });
+
+    // Initialize Quill Editor for Event Description
+    const quill = new Quill('#eventDescriptionEditor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                ['link'],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }]
+            ]
+        }
+    });
+    const eventDescriptionInput = document.getElementById('eventDescription');
+    quill.on('text-change', () => {
+        const text = quill.getText().trim();
+        eventDescriptionInput.value = quill.root.innerHTML;
+        const count = text.length;
+        const max = 500;
+        document.getElementById('eventDescriptionCount').textContent = `${count}/${max}`;
+        document.getElementById('eventDescriptionCount').classList.toggle('exceeded', count > max);
+        updateProgress();
+        autoSaveDraft();
+    });
+
+    // Dependent Dropdowns
+    const stateStationMap = {
+        'Andhra Pradesh': ['RHQ', 'Vijayawada SS', 'Visakhapatnam SS'],
+        'Telangana': ['Hyderabad SS', 'Warangal SS', 'Nizamabad SS', 'Khammam SS'],
+        'Karnataka': ['Bangalore SS', 'Mysore SS']
+    };
+
+    const stateSelect = document.getElementById('state');
+    const stationSelect = document.getElementById('stationName');
+    stateSelect.addEventListener('change', () => {
+        const stations = stateStationMap[stateSelect.value] || [];
+        stationSelect.innerHTML = '<option value="">Select Station</option>';
+        stations.forEach(station => {
+            const option = document.createElement('option');
+            option.value = station;
+            option.textContent = station;
+            stationSelect.appendChild(option);
+        });
+        updateProgress();
+        autoSaveDraft();
+    });
+
+    // Character Limit and Counter
+    const textFields = [
+        { id: 'schoolOrCollegeOrPanchayatName', max: 100, countId: 'schoolOrCollegeOrPanchayatNameCount' },
+        { id: 'eventLocation', max: 100, countId: 'eventLocationCount' },
+        { id: 'remarks', max: 500, countId: 'remarksCount' }
+    ];
+
+    textFields.forEach(field => {
+        const element = document.getElementById(field.id);
+        const countElement = document.getElementById(field.countId);
+        element.addEventListener('input', () => {
+            const count = element.value.length;
+            countElement.textContent = `${count}/${field.max}`;
+            countElement.classList.toggle('exceeded', count > field.max);
+            updateProgress();
+            autoSaveDraft();
+        });
+    });
+
+    // Progress Bar Calculation
+    function updateProgress() {
+        const requiredFields = ['state', 'stationName', 'activityType', 'eventCategory', 'participantCategory', 'eventDescription', 'eventDate', 'numberOfParticipants'];
+        let filledFields = 0;
+        requiredFields.forEach(id => {
+            const value = document.getElementById(id).value;
+            if (value && value.trim()) filledFields++;
+        });
+        const progress = (filledFields / requiredFields.length) * 100;
+        document.getElementById('progressBar').style.width = `${progress}%`;
+        document.getElementById('progressBar').setAttribute('aria-valuenow', Math.round(progress));
+        document.getElementById('progressText').textContent = `${Math.round(progress)}%`;
+    }
+    document.querySelectorAll('input, select, textarea').forEach(input => {
+        input.addEventListener('input', updateProgress);
+        input.addEventListener('change', updateProgress);
+    });
+    updateProgress();
+
+    // Image Preview and Drag-and-Drop
+    const imageUpload = document.getElementById('imageUpload');
+    const imagePreview = document.getElementById('imagePreview');
+    const dropzone = document.getElementById('dropzone');
+    
+    function handleFiles(files) {
+        imagePreview.innerHTML = '';
+        const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+        let valid = true;
+        Array.from(files).forEach(file => {
+            const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+            if (!allowedExtensions.includes(extension)) {
+                document.getElementById('imageUploadError').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Only JPEG, PNG, or GIF images are allowed.`;
+                valid = false;
+                imageUpload.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'max-w-[100px] rounded-md object-cover';
+                img.alt = `Preview of uploaded image ${file.name}`;
+                imagePreview.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        });
+        if (valid) {
+            document.getElementById('imageUploadError').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+            autoSaveDraft();
+        }
+    }
+
+    dropzone.addEventListener('click', () => imageUpload.click());
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('dragover');
+    });
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        imageUpload.files = e.dataTransfer.files;
+        handleFiles(e.dataTransfer.files);
+    });
+    imageUpload.addEventListener('change', () => handleFiles(imageUpload.files));
+
+    // Auto-Save Draft
+    function autoSaveDraft() {
+        const formData = new FormData(document.getElementById('activityForm'));
+        const draft = {};
+        formData.forEach((value, key) => {
+            if (key !== 'files') draft[key] = value;
+        });
+        draft.images = Array.from(imageUpload.files).map(file => file.name);
+        localStorage.setItem('activityDraft', JSON.stringify(draft));
+        console.log('Draft saved:', draft);
+    }
+
+    // Load Draft
+    window.addEventListener('load', () => {
+        const draft = JSON.parse(localStorage.getItem('activityDraft'));
+        if (draft) {
+            Object.keys(draft).forEach(key => {
+                if (key !== 'images' && key !== 'eventDescription') {
+                    const field = document.querySelector(`[name="${key}"], #${key}`);
+                    if (field) field.value = draft[key];
+                }
+            });
+            if (draft.eventDescription) {
+                quill.root.innerHTML = draft.eventDescription;
+                eventDescriptionInput.value = draft.eventDescription;
+                const count = quill.getText().trim().length;
+                document.getElementById('eventDescriptionCount').textContent = `${count}/500`;
+                document.getElementById('eventDescriptionCount').classList.toggle('exceeded', count > 500);
+            }
+            stateSelect.dispatchEvent(new Event('change')); // Trigger station dropdown update
+            textFields.forEach(field => {
+                const element = document.getElementById(field.id);
+                const countElement = document.getElementById(field.countId);
+                const count = element.value.length;
+                countElement.textContent = `${count}/${field.max}`;
+                countElement.classList.toggle('exceeded', count > field.max);
+            });
+            updateProgress();
+        }
+    });
+
+    // Modal Toggle
+    document.querySelector('[data-toggle="modal"]').addEventListener('click', () => {
+        document.getElementById('confirmModal').classList.add('show');
+    });
+    document.querySelectorAll('[data-dismiss="modal"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('confirmModal').classList.remove('show');
+        });
+    });
+
+    // Form Submission with Validation
+    document.getElementById('confirmSubmit').addEventListener('click', () => {
+        let isValid = true;
+        const errors = {
+            state: 'Please select a state.',
+            stationName: 'Please select a station.',
+            activityType: 'Please select an activity type.',
+            eventCategory: 'Please select an event category.',
+            participantCategory: 'Please select a participant category.',
+            eventDescription: 'Event description is required.',
+            eventDate: 'Please enter a valid date between 2024-10-28 and 2024-11-03.',
+            numberOfParticipants: 'Number of participants must be between 1 and 1000.'
+        };
+
+        // Reset error messages
+        document.querySelectorAll('.error-message').forEach(el => el.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>');
+
+        // Validate required fields
+        if (!document.getElementById('state').value) {
+            document.getElementById('stateError').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> ${errors.state}`;
+            isValid = false;
+        }
+        if (!document.getElementById('stationName').value) {
+            document.getElementById('stationNameError').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> ${errors.stationName}`;
+            isValid = false;
+        }
+        if (!document.getElementById('activityType').value) {
+            document.getElementById('activityTypeError').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> ${errors.activityType}`;
+            isValid = false;
+        }
+        if (!document.getElementById('eventCategory').value) {
+            document.getElementById('eventCategoryError').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> ${errors.eventCategory}`;
+            isValid = false;
+        }
+        if (!document.getElementById('participantCategory').value) {
+            document.getElementById('participantCategoryError').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> ${errors.participantCategory}`;
+            isValid = false;
+        }
+        const eventDescription = quill.getText().trim();
+        if (!eventDescription) {
+            document.getElementById('eventDescriptionError').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> ${errors.eventDescription}`;
+            isValid = false;
+        } else if (eventDescription.length > 500) {
+            document.getElementById('eventDescriptionError').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Event description exceeds 500 characters.`;
+            isValid = false;
+        }
+        const eventDate = document.getElementById('eventDate').value;
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!eventDate || !dateRegex.test(eventDate)) {
+            document.getElementById('eventDateError').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> ${errors.eventDate}`;
+            isValid = false;
+        } else {
+            const date = new Date(eventDate);
+            const minDate = new Date('2024-10-28');
+            const maxDate = new Date('2024-11-03');
+            if (date < minDate || date > maxDate) {
+                document.getElementById('eventDateError').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> ${errors.eventDate}`;
+                isValid = false;
+            }
+        }
+        const numParticipants = parseInt(document.getElementById('numberOfParticipants').value);
+        if (isNaN(numParticipants) || numParticipants < 1 || numParticipants > 1000) {
+            document.getElementById('numberOfParticipantsError').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> ${errors.numberOfParticipants}`;
+            isValid = false;
+        }
+        const files = document.getElementById('imageUpload').files;
+        for (let file of files) {
+            const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+            if (!['.jpg', '.jpeg', '.png', '.gif'].includes(extension)) {
+                document.getElementById('imageUploadError').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Only JPEG, PNG, or GIF images are allowed.`;
+                isValid = false;
+            }
+        }
+
+        if (isValid) {
+            showSpinner();
+            fetch('/save', {
+                method: 'POST',
+                body: new FormData(document.getElementById('activityForm')),
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]')?.value
+                }
+            }).then(response => {
+                if (response.ok) {
+                    localStorage.removeItem('activityDraft');
+                    window.location.href = '/save/saveSuccess';
+                } else {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Failed to save activity.');
+                    });
+                }
+            }).catch(error => {
+                hideSpinner();
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-danger mb-4 rounded-md p-4';
+                alert.textContent = error.message;
+                document.querySelector('.card').prepend(alert);
+                setTimeout(() => alert.remove(), 5000);
+            });
+            document.getElementById('confirmModal').classList.remove('show');
+        }
+    });
+
+    // Session Timeout Warning
+    let timeLeft = 60;
+    let timeoutId;
+    function resetSessionTimer() {
+        clearTimeout(timeoutId);
+        timeLeft = 60;
+        document.getElementById('timer').textContent = timeLeft;
+        document.getElementById('sessionAlert').style.display = 'none';
+        timeoutId = setTimeout(() => {
+            document.getElementById('sessionAlert').style.display = 'block';
+            const countdown = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    window.location.href = '/';
+                }
+            }, 1000);
+        }, 15 * 60 * 1000);
+    }
+    document.getElementById('extendSession').addEventListener('click', () => {
+        resetSessionTimer();
+        fetch('/extend-session', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]')?.value
+            }
+        }).catch(error => console.error('Session extension failed:', error));
+    });
+    document.querySelector('.btn-close').addEventListener('click', () => {
+        document.getElementById('sessionAlert').style.display = 'none';
+    });
+    document.addEventListener('mousemove', resetSessionTimer);
+    document.addEventListener('keydown', resetSessionTimer);
+    resetSessionTimer();
+
+    // Keyboard Navigation and Accessibility
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && !quill.hasFocus()) {
+            document.querySelector('[data-toggle="modal"]').click();
+        }
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('confirmModal');
+            if (modal.classList.contains('show')) {
+                document.querySelector('[data-dismiss="modal"]').click();
+            } else {
+                window.location.href = '/';
+            }
+        }
+    });
+
+    // Focus Management for Accessibility
+    document.querySelectorAll('input, select, textarea, button').forEach(element => {
+        element.addEventListener('focus', () => {
+            element.classList.add('ring-2', 'ring-blue-500');
+        });
+        element.addEventListener('blur', () => {
+            element.classList.remove('ring-2', 'ring-blue-500');
+        });
+    });
+</script>
+</body>
+</html>

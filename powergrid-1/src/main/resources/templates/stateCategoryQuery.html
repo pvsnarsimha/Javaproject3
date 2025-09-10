@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query by State and Event Category</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --info: #4895ef;
+            --warning: #f72585;
+            --danger: #e63946;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --background: #ffffff;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --border: #dee2e6;
+            --hover: #f0f0f0;
+        }
+
+        .theme-dark {
+            --primary: #4cc9f0;
+            --secondary: #4361ee;
+            --background: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text: #f0f0f0;
+            --border: #444;
+            --hover: #333;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .theme-dark .card {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-dark .card:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            background: linear-gradient(120deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(120deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(120deg, var(--secondary), var(--primary));
+            transform: translateY(-2px);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary);
+            border-color: var(--primary);
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 10px 15px;
+            background-color: var(--card-bg);
+            color: var(--text);
+        }
+
+        .theme-dark .form-control, 
+        .theme-dark .form-select {
+            background-color: #333;
+            border-color: #555;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+        }
+
+        .table {
+            color: var(--text);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table th {
+            background: linear-gradient(120deg, var(--primary), var(--secondary));
+            color: white;
+            font-weight: 600;
+            border: none;
+            padding: 12px 15px;
+        }
+
+        .table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: var(--hover);
+            cursor: pointer;
+        }
+
+        .pagination .page-link {
+            color: var(--primary);
+            border-radius: 8px;
+            margin: 0 3px;
+            border: 1px solid var(--border);
+        }
+
+        .pagination .page-link:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(120deg, var(--primary), var(--secondary));
+            border-color: var(--primary);
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+            border-radius: 12px;
+            background: linear-gradient(120deg, var(--info), var(--success));
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .stat-card i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-card h3 {
+            font-size: 1.8rem;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .stat-card p {
+            margin: 5px 0 0;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .filter-section {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .section-title {
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            font-size: 1.5rem;
+        }
+
+        .toggle-columns-button {
+            background: linear-gradient(120deg, var(--info), var(--success));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-weight: 600;
+        }
+
+        .toggle-columns-button:hover {
+            background: linear-gradient(120deg, var(--success), var(--info));
+            color: white;
+        }
+
+        .autocomplete-suggestions {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: absolute;
+            background: var(--card-bg);
+            z-index: 1000;
+            width: calc(100% - 30px);
+        }
+
+        .theme-dark .autocomplete-suggestions {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .autocomplete-suggestions div {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .autocomplete-suggestions div:hover {
+            background-color: var(--hover);
+        }
+
+        .modal-content {
+            border-radius: 12px;
+            background-color: var(--card-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .modal-header {
+            background: linear-gradient(120deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .badge-operator {
+            background: linear-gradient(120deg, var(--warning), var(--danger));
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(120deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .hidden-column {
+            display: none;
+        }
+
+        .toggle-columns-container {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .toggle-columns-dropdown {
+            display: none;
+            position: absolute;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 15px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            min-width: 200px;
+            border-radius: 8px;
+        }
+
+        .toggle-columns-dropdown.show {
+            display: block;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary);
+        }
+
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        .sortable::after {
+            content: '↕';
+            margin-left: 5px;
+            font-size: 0.8em;
+            opacity: 0.5;
+        }
+
+        .sort-asc::after {
+            content: '↑';
+            opacity: 1;
+        }
+
+        .sort-desc::after {
+            content: '↓';
+            opacity: 1;
+        }
+
+        .details-row {
+            background-color: var(--hover);
+        }
+
+        .radio-group .btn-check:checked + .btn {
+            background: linear-gradient(120deg, var(--primary), var(--secondary));
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .floating-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1050;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .highlight {
+            background-color: #d4edda;
+        }
+
+        body.light-theme {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+        body.dark-theme {
+            background: #1f2937;
+            color: #e5e7eb;
+        }
+
+        body.dark-theme .card {
+            background: #374151;
+        }
+
+        body.dark-theme .form-control, body.dark-theme .form-select {
+            background: #4b5563;
+            color: #e5e7eb;
+            border-color: #6b7280;
+        }
+
+        body.dark-theme .table-header {
+            background: #1e40af;
+        }
+
+        body.dark-theme .modal .card {
+            background: #374151;
+        }
+
+        .recent-queries-container {
+            margin-top: 20px;
+        }
+
+        .recent-query-item {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .recent-query-item:hover {
+            background-color: var(--hover);
+        }
+
+        .recent-query-item .delete-query {
+            float: right;
+            color: var(--danger);
+        }
+
+        .recent-query-item .delete-query:hover {
+            color: var(--warning);
+        }
+        /* New CSS added here for query history navigation */
+        #queryHistory {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        /* New CSS for syntax display and query preview */
+        #syntaxDisplay, #queryPreview {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: monospace;
+        }
+
+        /* New CSS for execution time */
+        #executionTime {
+            margin-top: 10px;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+              .batch-query-container {
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .batch-query-item {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            align-items: center;
+        }
+        .batch-query-item label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            flex: 0 0 100%;
+        }
+        .batch-query-item .form-group {
+            flex: 1 1 200px;
+            min-width: 150px;
+        }
+        .batch-query-item select, .batch-query-item button {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+        }
+        .batch-query-item .remove-query {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            cursor: pointer;
+            max-width: 100px;
+        }
+        .batch-query-item .remove-query:hover {
+            background-color: #c82333;
+        }
+        .batch-query-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .batch-query-actions button {
+            padding: 10px 20px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        #add-query {
+            background-color: #28a745;
+            color: white;
+        }
+        #add-query:hover {
+            background-color: #218838;
+        }
+        #execute-batch {
+            background-color: #007bff;
+            color: white;
+        }
+        #execute-batch:hover {
+            background-color: #0056b3;
+        }
+        .batch-results-container {
+            margin-top: 20px;
+        }
+        .batch-result-item {
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: #ffffff;
+        }
+        .batch-result-item h3 {
+            cursor: pointer;
+            margin: 0;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px 5px 0 0;
+        }
+        .batch-result-content {
+            display: none;
+            padding: 15px;
+        }
+        .batch-result-content.show {
+            display: block;
+        }
+        .batch-results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+        .batch-results-table th, .batch-results-table td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            text-align: left;
+        }
+        .batch-results-table th {
+            background-color: #f1f3f5;
+            font-weight: bold;
+        }
+        .batch-results-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .batch-result-stats {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #495057;
+        }
+        @media (max-width: 768px) {
+            .batch-query-item {
+                flex-direction: column;
+            }
+            .batch-query-item .form-group {
+                flex: 0 0 100%;
+            }
+            }
+            
+            
+    </style>
+</head>
+<body class="light-theme min-h-screen">
+    <div class="container mt-4">
+        <div class="logo-container">
+            <div class="logo">
+                <i class="fas fa-filter"></i>
+            </div>
+            <div>
+                <h2 class="mb-0">Query by State and Event Category</h2>
+                <p class="text-muted mb-0">Filter and analyze activities with precision</p>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="/activity" class="btn btn-outline-primary"><i class="fas fa-home me-2"></i> Back to Home</a>
+            <div>
+                <a href="#" id="toggle-theme" class="btn btn-outline-primary me-2"><i class="fas fa-adjust me-2"></i>Toggle Theme</a>
+                <button id="copy-table" class="btn btn-outline-primary"><i class="fas fa-copy me-2"></i>Copy Table</button>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <h4 class="section-title"><i class="fas fa-sliders-h"></i> Advanced Filters</h4>
+            <form id="queryForm" th:action="@{/stateCategoryQuery}" method="post">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="searchInput" class="form-label">Search</label>
+                        <div class="search-container">
+                            <input type="text" id="searchInput" name="search" th:value="${search} ?: ''" class="form-control" placeholder="e.g., Quiz AND Karnataka">
+                            <i class="fas fa-search search-icon"></i>
+                        </div>
+                        <div id="searchSuggestions" class="autocomplete-suggestions d-none"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="stateSelect" class="form-label">Select State</label>
+                        <select id="stateSelect" name="state" class="form-select">
+                            <option value="">Select State</option>
+                            <option value="Andhra Pradesh" th:selected="${state == 'Andhra Pradesh'}">Andhra Pradesh</option>
+                            <option value="Telangana" th:selected="${state == 'Telangana'}">Telangana</option>
+                            <option value="Karnataka" th:selected="${state == 'Karnataka'}">Karnataka</option>
+                        </select>
+                        <div id="stateError" class="error-message text-danger mt-1" th:if="${#strings.isEmpty(state)}">Please select a state.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="categorySelect" class="form-label">Select Event Category</label>
+                        <select id="categorySelect" name="eventCategory" class="form-select">
+                            <option value="">Select Event Category</option>
+                            <option value="Integrity Pledge" th:selected="${eventCategory == 'Integrity Pledge'}">Integrity Pledge</option>
+                            <option value="Vendors Meet" th:selected="${eventCategory == 'Vendors Meet'}">Vendors Meet</option>
+                            <option value="Elocution" th:selected="${eventCategory == 'Elocution'}">Elocution</option>
+                            <option value="Debate" th:selected="${eventCategory == 'Debate'}">Debate</option>
+                            <option value="Drawing" th:selected="${eventCategory == 'Drawing'}">Drawing</option>
+                            <option value="Quiz" th:selected="${eventCategory == 'Quiz'}">Quiz</option>
+                            <option value="Slogan" th:selected="${eventCategory == 'Slogan'}">Slogan</option>
+                        </select>
+                        <div id="categoryError" class="error-message text-danger mt-1" th:if="${#strings.isEmpty(eventCategory)}">Please select an event category.</div>
+                    </div>
+                </div>
+                <div class="row g-3 mt-3">
+                    <div class="col-md-12">
+                        <label class="form-label">Select Operator</label>
+                        <div class="d-flex gap-2 radio-group">
+                            <input type="radio" class="btn-check" name="operator" id="operatorAND" value="AND" th:checked="${operator == 'AND'}" autocomplete="off" checked>
+                            <label class="btn btn-outline-primary" for="operatorAND"><i class="fas fa-plus-circle me-2"></i>AND</label>
+                            <input type="radio" class="btn-check" name="operator" id="operatorOR" value="OR" th:checked="${operator == 'OR'}" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="operatorOR"><i class="fas fa-project-diagram me-2"></i>OR</label>
+                            <input type="radio" class="btn-check" name="operator" id="operatorNOT" value="NOT" th:checked="${operator == 'NOT'}" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="operatorNOT"><i class="fas fa-minus-circle me-2"></i>NOT</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3 mt-3">
+                    <div class="col-md-4">
+                        <label for="groupBy" class="form-label">Group By</label>
+                        <select id="groupBy" name="groupBy" class="form-select">
+                            <option value="">None</option>
+                            <option value="state" th:selected="${groupBy == 'state'}">State</option>
+                            <option value="eventCategory" th:selected="${groupBy == 'eventCategory'}">Event Category</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="saveQueryName" class="form-label">Save Current Query</label>
+                        <input type="text" id="saveQueryName" class="form-control" placeholder="Enter query name">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end gap-2">
+                        <button type="button" id="saveQueryBtn" class="btn btn-success flex-fill"><i class="fas fa-save me-2"></i> Save Query</button>
+                        <button type="button" id="resetFiltersBtn" class="btn btn-warning flex-fill"><i class="fas fa-undo me-2"></i> Reset</button>
+                        <button type="submit" id="runQueryBtn" class="btn btn-primary flex-fill"><i class="fas fa-play me-2"></i> Run Query</button>
+                    </div>
+                </div>
+ <div class="batch-query-container">
+                    <h3>Batch Query Execution</h3>
+                    <div id="batch-queries">
+                        <div class="batch-query-item" data-query-id="1">
+                            <label>Query 1</label>
+                            <div class="form-group">
+                                <label for="batch-state-1">State</label>
+                                <select id="batch-state-1" name="batch-state-1">
+                                    <option value="">Select State</option>
+                                    <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                    <option value="Telangana">Telangana</option>
+                                    <option value="Karnataka">Karnataka</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="batch-eventCategory-1">Event Category</label>
+                                <select id="batch-eventCategory-1" name="batch-eventCategory-1">
+                                    <option value="">Select Event Category</option>
+                                    <option value="Integrity Pledge">Integrity Pledge</option>
+                                    <option value="Vendors Meet">Vendors Meet</option>
+                                    <option value="Elocution">Elocution</option>
+                                    <option value="Debate">Debate</option>
+                                    <option value="Drawing">Drawing</option>
+                                    <option value="Quiz">Quiz</option>
+                                    <option value="Slogan">Slogan</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="batch-operator-1">Operator</label>
+                                <select id="batch-operator-1" name="batch-operator-1">
+                                    <option value="AND">AND</option>
+                                    <option value="OR">OR</option>
+                                    <option value="NOT">NOT</option>
+                                </select>
+                            </div>
+                            <button type="button" class="remove-query">Remove</button>
+                        </div>
+                    </div>
+                    <div class="batch-query-actions">
+                        <button type="button" id="add-query">Add Query</button>
+                        <button type="button" id="execute-batch">Execute Batch Queries</button>
+                    </div>
+                </div>
+                    <!-- Visual Query Builder -->
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">Visual Query Builder</h3>
+                    <div id="queryBuilder" class="border p-4 bg-gray-50 dark:bg-gray-700 rounded">
+                        <div id="conditions" class="space-y-2"></div>
+                        <button id="addCondition" class="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-sm">Add Condition</button>
+                        <button id="addGroup" class="mt-2 px-3 py-1 bg-green-600 text-white rounded text-sm">Add Group</button>
+                    </div>
+                </div>
+                            <div class="form-group">
+                    <label for="groupBy">Group By</label>
+                    <select id="groupBy" name="groupBy">
+                        <option value="">None</option>
+                        <option value="state">State</option>
+                        <option value="eventCategory">Event Category</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="save-query">Save Current Query</button>
+                    <button type="reset" id="reset-form">Reset</button>
+                    <button type="submit">Run Query</button>
+                </div>
+            </form>
+                <div class="recent-queries-container">
+                    <h4 class="section-title"><i class="fas fa-history"></i> Recent Queries</h4>
+                    <div id="recentQueries" class="list-group"></div>
+                </div>
+                 <!-- New HTML added here for query history navigation -->
+                <div id="queryHistory">
+                    <h4 class="section-title"><i class="fas fa-clock"></i> Query History</h4>
+                    <div id="historyList"></div>
+                </div>
+                <!-- New HTML added here for syntax display -->
+                <div id="syntaxDisplay">
+                    <h4 class="section-title"><i class="fas fa-code"></i> Query Syntax</h4>
+                    <pre id="syntaxOutput"></pre>
+                </div>
+                <!-- New HTML added here for query preview -->
+                <div id="queryPreview">
+                    <h4 class="section-title"><i class="fas fa-eye"></i> Query Preview</h4>
+                    <pre id="previewOutput"></pre>
+                </div>
+                <!-- New HTML added here for execution time -->
+                <div id="executionTime">
+                    Execution Time: <span id="timeOutput">0 ms</span>
+                </div>
+            </form>
+        </div>
+            </form>
+        </div>
+
+        <div class="toggle-columns-container mb-3">
+            <button class="btn toggle-columns-button"><i class="fas fa-columns me-2"></i> Toggle Columns</button>
+            <div class="toggle-columns-dropdown">
+                <div class="form-check"><input type="checkbox" class="form-check-input column-toggle" data-column="0" checked><label class="form-check-label">ID</label></div>
+                <div class="form-check"><input type="checkbox" class="form-check-input column-toggle" data-column="1" checked><label class="form-check-label">State</label></div>
+                <div class="form-check"><input type="checkbox" class="form-check-input column-toggle" data-column="2" checked><label class="form-check-label">Station Name</label></div>
+                <div class="form-check"><input type="checkbox" class="form-check-input column-toggle" data-column="3" checked><label class="form-check-label">Activity Type</label></div>
+                <div class="form-check"><input type="checkbox" class="form-check-input column-toggle" data-column="4" checked><label class="form-check-label">Event Category</label></div>
+                <div class="form-check"><input type="checkbox" class="form-check-input column-toggle" data-column="5" checked><label class="form-check-label">Participant Category</label></div>
+                <div class="form-check"><input type="checkbox" class="form-check-input column-toggle" data-column="6" checked><label class="form-check-label">Event Description</label></div>
+                <div class="form-check"><input type="checkbox" class="form-check-input column-toggle" data-column="7" checked><label class="form-check-label">School/College/Panchayat Name</label></div>
+                <div class="form-check"><input type="checkbox" class="form-check-input column-toggle" data-column="8" checked><label class="form-check-label">Event Location</label></div>
+                <div class="form-check"><input type="checkbox" class="form-check-input column-toggle" data-column="9" checked><label class="form-check-label">Event Date</label></div>
+                <div class="form-check"><input type="checkbox" class="form-check-input column-toggle" data-column="10" checked><label class="form-check-label">Number of Participants</label></div>
+                <div class="form-check"><input type="checkbox" class="form-check-input column-toggle" data-column="11" checked><label class="form-check-label">Remarks</label></div>
+            </div>
+        </div>
+        <section id="batch-results">
+            <h2>Batch Query Results</h2>
+            <div id="batch-results-container">
+                <!-- Batch query results will be populated dynamically -->
+            </div>
+        </section>
+        <div id="loadingIndicator" class="text-center d-none my-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading activities...</p>
+        </div>
+
+        <div id="errorMessage" class="alert alert-danger d-none" role="alert" th:if="${not #strings.isEmpty(errorMessage)}" th:text="${errorMessage}"></div>
+
+        <div class="row mb-4" id="summaryStats" th:classappend="${activities.isEmpty()} ? 'd-none' : ''">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3 id="totalActivities" th:text="${totalElements != null ? totalElements : 0}">0</h3>
+                    <p>Total Activities</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <h3 id="uniqueStates" th:text="${uniqueStates != null ? uniqueStates : 0}">0</h3>
+                    <p>Unique States</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <h3 id="totalParticipants" th:text="${totalParticipants != null ? totalParticipants : 0}">0</h3>
+                    <p>Total Participants</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-table me-2"></i> Activity Results</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-container">
+                    <table id="eventTable" class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-column="id">ID</th>
+                                <th class="sortable" data-column="state">State</th>
+                                <th class="sortable" data-column="stationName">Station Name</th>
+                                <th class="sortable" data-column="activityType">Activity Type</th>
+                                <th class="sortable" data-column="eventCategory">Event Category</th>
+                                <th class="sortable" data-column="participantCategory">Participant Category</th>
+                                <th class="sortable" data-column="eventDescription">Event Description</th>
+                                <th class="sortable" data-column="schoolOrCollegeOrPanchayatName">School/College/Panchayat Name</th>
+                                <th class="sortable" data-column="eventLocation">Event Location</th>
+                                <th class="sortable" data-column="eventDate">Event Date</th>
+                                <th class="sortable" data-column="numberOfParticipants">Number of Participants</th>
+                                <th class="sortable" data-column="remarks">Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activityTableBody">
+                            <tr th:unless="${activities.isEmpty()}" th:each="activity : ${activities}" th:data-id="${activity.id}" th:class="${activity.numberOfParticipants > 100 ? 'highlight' : ''}">
+                                <td class="id" th:text="${activity.id}"></td>
+                                <td class="state" th:text="${activity.state} ?: ''"></td>
+                                <td class="stationName" th:text="${activity.stationName} ?: ''"></td>
+                                <td class="activityType" th:text="${activity.activityType} ?: ''"></td>
+                                <td class="eventCategory" th:text="${activity.eventCategory} ?: ''"></td>
+                                <td class="participantCategory" th:text="${activity.participantCategory} ?: ''"></td>
+                                <td class="eventDescription" th:text="${#strings.length(activity.eventDescription ?: '') > 50 ? #strings.substring(activity.eventDescription, 0, 50) + '...' : activity.eventDescription ?: ''}"></td>
+                                <td class="schoolOrCollegeOrPanchayatName" th:text="${activity.schoolOrCollegeOrPanchayatName} ?: ''"></td>
+                                <td class="eventLocation" th:text="${activity.eventLocation} ?: ''"></td>
+                                <td class="eventDate" th:text="${activity.eventDate} ?: ''"></td>
+                                <td class="numberOfParticipants" th:text="${activity.numberOfParticipants} ?: 0"></td>
+                                <td class="remarks" th:text="${#strings.length(activity.remarks ?: '') > 50 ? #strings.substring(activity.remarks, 0, 50) + '...' : activity.remarks ?: ''}"></td>
+                            </tr>
+                            <tr th:if="${activities.isEmpty()}">
+                                <td colspan="12" class="text-center py-4">No activities found. Try adjusting your filters or adding data.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i> Aggregated Data</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-container">
+                    <table id="aggTable" class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>State</th>
+                                <th>Total Participants</th>
+                                <th>Number of Activities</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aggTableBody">
+                            <tr th:each="entry : ${aggData}">
+                                <td th:text="${entry.key}"></td>
+                                <td th:text="${entry.value.participants}"></td>
+                                <td th:text="${entry.value.count}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" th:classappend="${currentPage == null or currentPage <= 0} ? 'disabled'">
+                    <a class="page-link" id="prevPage" th:href="@{/(page=${(currentPage != null and currentPage > 0) ? currentPage - 1 : 0}, size=${size != null ? size : 10}, search=${search != null ? search : ''}, state=${state != null ? state : ''}, eventCategory=${eventCategory != null ? eventCategory : ''}, sortBy=${sortBy != null ? sortBy : 'id'}, sortDir=${sortDir != null ? sortDir : 'asc'}, groupBy=${groupBy != null ? groupBy : ''})}">
+                        <i class="fas fa-chevron-left me-1"></i> Previous
+                    </a>
+                </li>
+                <li class="page-item">
+                    <span class="page-link" id="pageInfo">Page <span th:text="${currentPage != null ? currentPage + 1 : 1}"></span> of <span th:text="${totalPages != null ? totalPages : 1}"></span></span>
+                </li>
+                <li class="page-item" th:classappend="${currentPage == null or totalPages == null or currentPage >= totalPages - 1} ? 'disabled'">
+                    <a class="page-link" id="nextPage" th:href="@{/(page=${(currentPage != null ? currentPage : 0) + 1}, size=${size != null ? size : 10}, search=${search != null ? search : ''}, state=${state != null ? state : ''}, eventCategory=${eventCategory != null ? eventCategory : ''}, sortBy=${sortBy != null ? sortBy : 'id'}, sortDir=${sortDir != null ? sortDir : 'asc'}, groupBy=${groupBy != null ? groupBy : ''})}">
+                        Next <i class="fas fa-chevron-right ms-1"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="modal fade" id="notOperatorModal" tabindex="-1" aria-labelledby="notOperatorModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="notOperatorModalLabel"><i class="fas fa-exclamation-triangle me-2"></i> Confirm NOT Operator</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>The NOT operator will exclude activities matching the selected state and/or event category.</p>
+                        <p>This will return <span id="notOperatorRowCount" class="badge-operator">0</span> results.</p>
+                        <p class="text-warning"><i class="fas fa-info-circle me-2"></i>This operation might return a large number of results.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="confirmNotOperator">Proceed</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="notification" class="alert alert-success floating-notification d-none" role="alert"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const config = {
+                columns: [
+                    { name: 'ID', key: 'id', index: 0 },
+                    { name: 'State', key: 'state', index: 1 },
+                    { name: 'Station Name', key: 'stationName', index: 2 },
+                    { name: 'Activity Type', key: 'activityType', index: 3 },
+                    { name: 'Event Category', key: 'eventCategory', index: 4 },
+                    { name: 'Participant Category', key: 'participantCategory', index: 5 },
+                    { name: 'Event Description', key: 'eventDescription', index: 6 },
+                    { name: 'School/College/Panchayat Name', key: 'schoolOrCollegeOrPanchayatName', index: 7 },
+                    { name: 'Event Location', key: 'eventLocation', index: 8 },
+                    { name: 'Event Date', key: 'eventDate', index: 9 },
+                    { name: 'Number of Participants', key: 'numberOfParticipants', index: 10 },
+                    { name: 'Remarks', key: 'remarks', index: 11 }
+                ],
+                pageSize: parseInt('[[${size != null ? size : 10}]]')
+            };
+
+            let currentPage = parseInt('[[${currentPage != null ? currentPage : 0}]]');
+            let sortBy = ("[[${sortBy != null ? sortBy : 'id'}]]");
+            let sortDir = ("[[${sortDir != null ? sortDir : 'asc'}]]");
+            let totalPages = parseInt('[[${totalPages != null ? totalPages : 1}]]');
+            let expandedRows = new Set();
+            let pendingNotQuery = false;
+            
+            // New JS added here for query history storage
+            let queryHistory = JSON.parse(localStorage.getItem('queryHistory')) || [];
+
+            // New JS for updating query history display
+            function updateQueryHistory() {
+                $('#historyList').empty();
+                queryHistory.forEach((query, index) => {
+                    const item = $(`<div class="recent-query-item" data-index="${index}">${query.sql}</div>`);
+                    item.click(() => {
+                        $('#searchInput').val(query.search);
+                        $('#stateSelect').val(query.state);
+                        $('#categorySelect').val(query.eventCategory);
+                        $(`input[name="operator"][value="${query.operator}"]`).prop('checked', true);
+                        $('#groupBy').val(query.groupBy);
+                        updateSyntaxDisplay(query.sql);
+                        updateQueryPreview(query.sql);
+                        fetchActivities();
+                    });
+                    $('#historyList').append(item);
+                });
+            }
+
+            // New JS for syntax display
+            function updateSyntaxDisplay(query) {
+                // Basic SQL syntax highlighting
+                let highlighted = query
+                    .replace(/(SELECT|FROM|WHERE|AND|OR|NOT|GROUP BY)/gi, '<span style="color: blue;">$1</span>')
+                    .replace(/(\*|\(|\))/g, '<span style="color: red;">$1</span>')
+                    .replace(/'[^\']*'/g, '<span style="color: green;">$1</span>')
+                    .replace(/([a-zA-Z0-9_]+\.[a-zA-Z0-9_]+)/g, '<span style="color: purple;">$1</span>');
+                $('#syntaxOutput').html(highlighted);
+            }
+
+            // New JS for query preview
+            function updateQueryPreview(query) {
+                // Simple preview showing query structure
+                $('#previewOutput').text(`Preview: ${query.toUpperCase().slice(0, 50)}...`);
+            }
+
+            // New JS for clearing query history
+            $('#clearHistoryBtn').click(function() {
+                queryHistory = [];
+                localStorage.setItem('queryHistory', JSON.stringify(queryHistory));
+                updateQueryHistory();
+                showNotification('Query history cleared.', 'success');
+            });
+         // New JS for query performance optimization
+            function optimizeQuery(query) {
+                // Basic optimization: trim and normalize whitespace
+                let optimized = query.trim().replace(/\s+/g, ' ');
+                // Additional optimization: remove redundant conditions
+                optimized = optimized.replace(/AND\s+AND/gi, 'AND').replace(/OR\s+OR/gi, 'OR');
+                return optimized;
+            }
+         
+
+            // Initialize column preferences
+            const columnPreferences = JSON.parse(localStorage.getItem('columnPreferences')) || Array(config.columns.length).fill(true);
+            function toggleColumnVisibility(columnIndex, isVisible) {
+                $('#eventTable').find('tr').each(function() {
+                    $(this).find('td, th').eq(columnIndex).toggleClass('hidden-column', !isVisible);
+                });
+            }
+            function saveColumnPreferences() {
+                const preferences = Array.from($('.column-toggle')).map(checkbox => checkbox.checked);
+                localStorage.setItem('columnPreferences', JSON.stringify(preferences));
+            }
+            $('.column-toggle').each((index, checkbox) => {
+                checkbox.checked = columnPreferences[index];
+                toggleColumnVisibility(index, checkbox.checked);
+            });
+
+            // Theme toggle
+            $('#toggle-theme').click(function(e) {
+                e.preventDefault();
+                const body = $('body');
+                if (body.hasClass('light-theme')) {
+                    body.removeClass('light-theme').addClass('dark-theme');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    body.removeClass('dark-theme').addClass('light-theme');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+            if (localStorage.getItem('theme') === 'dark') {
+                $('body').removeClass('light-theme').addClass('dark-theme');
+            }
+
+            // Auto-suggestions
+            const suggestions = [
+                'Andhra Pradesh', 'Telangana', 'Karnataka',
+                'Integrity Pledge', 'Vendors Meet', 'Elocution', 'Debate', 'Drawing', 'Quiz', 'Slogan'
+            ];
+            $('#searchInput').on('input', function() {
+                const value = $(this).val().toLowerCase();
+                $('#searchSuggestions').empty().addClass('d-none');
+                if (value) {
+                    const matches = suggestions.filter(s => s.toLowerCase().includes(value));
+                    if (matches.length) {
+                        matches.forEach(m => $('#searchSuggestions').append(`<div>${m}</div>`));
+                        $('#searchSuggestions').removeClass('d-none');
+                    }
+                }
+                currentPage = 0;
+                fetchActivities();
+            });
+            $('#searchSuggestions').on('click', 'div', function() {
+                $('#searchInput').val($(this).text());
+                $('#searchSuggestions').addClass('d-none');
+                currentPage = 0;
+                fetchActivities();
+            });
+
+            // Load persisted query
+            function loadFormState() {
+                const savedQuery = JSON.parse(localStorage.getItem('currentQuery') || '{}');
+                if (savedQuery) {
+                    $('#searchInput').val(savedQuery.search || '');
+                    $('#stateSelect').val(savedQuery.state || '');
+                    $('#categorySelect').val(savedQuery.eventCategory || '');
+                    $(`input[name="operator"][value="${savedQuery.operator || 'AND'}"]`).prop('checked', true);
+                    $('#groupBy').val(savedQuery.groupBy || '');
+                }
+            }
+
+            // Recent Queries
+            function loadRecentQueries() {
+                const queries = JSON.parse(localStorage.getItem('recentQueries') || '[]');
+                $('#recentQueries').empty();
+                if (queries.length > 0) {
+                    queries.forEach((query, index) => {
+                        const queryItem = `
+                            <div class="recent-query-item" data-index="${index}">
+                                <span>${query.name} (${query.state || 'Any'}, ${query.eventCategory || 'Any'}, ${query.operator}, ${query.search || 'No search'}, ${query.groupBy || 'None'})</span>
+                                <i class="fas fa-trash delete-query" data-index="${index}"></i>
+                            </div>`;
+                        $('#recentQueries').append(queryItem);
+                    });
+                } else {
+                    $('#recentQueries').append('<div class="text-muted">No recent queries found.</div>');
+                }
+            }
+
+            $('#recentQueries').on('click', '.recent-query-item', function(e) {
+                if ($(e.target).hasClass('delete-query')) return;
+                const index = $(this).data('index');
+                const queries = JSON.parse(localStorage.getItem('recentQueries') || '[]');
+                const query = queries[index];
+                if (query) {
+                    $('#searchInput').val(query.search || '');
+                    $('#stateSelect').val(query.state || '');
+                    $('#categorySelect').val(query.eventCategory || '');
+                    $(`input[name="operator"][value="${query.operator || 'AND'}"]`).prop('checked', true);
+                    $('#groupBy').val(query.groupBy || '');
+                    currentPage = 0;
+                    fetchActivities();
+                    showNotification(`Loaded query: ${query.name}`, 'success');
+                }
+            });
+
+            $('#recentQueries').on('click', '.delete-query', function(e) {
+                e.stopPropagation();
+                const index = $(this).data('index');
+                let queries = JSON.parse(localStorage.getItem('recentQueries') || '[]');
+                const queryName = queries[index]?.name || '';
+                queries.splice(index, 1);
+                localStorage.setItem('recentQueries', JSON.stringify(queries));
+                loadRecentQueries();
+                showNotification(`Deleted query: ${queryName}`, 'success');
+            });
+
+            // Save query
+            $('#saveQueryBtn').click(function() {
+                const name = $('#saveQueryName').val().trim();
+                if (!name) {
+                    showNotification('Please enter a query name.', 'danger');
+                    return;
+                }
+                const query = {
+                    name,
+                    state: $('#stateSelect').val(),
+                    eventCategory: $('#categorySelect').val(),
+                    operator: $('input[name="operator"]:checked').val(),
+                    search: $('#searchInput').val(),
+                    groupBy: $('#groupBy').val()
+                };
+                const queries = JSON.parse(localStorage.getItem('recentQueries') || '[]');
+                if (!queries.find(q => q.name === name)) {
+                    queries.push(query);
+                    localStorage.setItem('recentQueries', JSON.stringify(queries));
+                    $('#saveQueryName').val('');
+                    loadRecentQueries();
+                    showNotification('Query saved successfully.', 'success');
+                } else {
+                    showNotification('Query name already exists.', 'danger');
+                }
+            });
+
+            // Reset filters
+            $('#resetFiltersBtn').click(function() {
+                $('#queryForm')[0].reset();
+                $('#stateSelect').val('');
+                $('#categorySelect').val('');
+                $('#searchInput').val('');
+                $('#groupBy').val('');
+                $('input[name="operator"][value="AND"]').prop('checked', true);
+                localStorage.removeItem('currentQuery');
+                currentPage = 0;
+                totalPages = 1;
+                $('#activityTableBody').html('<tr><td colspan="12" class="text-center">No activities found</td></tr>');
+                $('#aggTableBody').empty();
+                updateSummaryStats(0, 0, 0);
+                $('#pageInfo').text(`Page 1 of 1`);
+                $('#prevPage').parent().addClass('disabled');
+                $('#nextPage').parent().addClass('disabled');
+                showNotification('Filters reset.', 'success');
+            });
+
+            // Copy table data
+            $('#copy-table').click(function() {
+                const table = $('#eventTable');
+                let text = '';
+                table.find('tr:visible').each(function() {
+                    $(this).find('td:visible, th:visible').each(function() {
+                        text += $(this).text().trim() + '\t';
+                    });
+                    text += '\n';
+                });
+                navigator.clipboard.writeText(text).then(() => showNotification('Table copied to clipboard!', 'success'));
+            });
+
+            // Keyboard shortcuts
+            $(document).keydown(function(e) {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    $('#queryForm').submit();
+                } else if (e.ctrlKey && e.key === 'r') {
+                    e.preventDefault();
+                    $('#resetFiltersBtn').click();
+                } else if (e.ctrlKey && e.key === 'c') {
+                    e.preventDefault();
+                    $('#copy-table').click();
+                } else if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    $('#saveQueryBtn').click();
+                }
+            });
+
+            // Form validation
+            function validateForm() {
+                let isValid = true;
+                const state = $('#stateSelect').val();
+                const category = $('#categorySelect').val();
+                const operator = $('input[name="operator"]:checked').val();
+
+                $('#stateSelect').removeClass('form-invalid');
+                $('#categorySelect').removeClass('form-invalid');
+                $('#stateError').addClass('d-none');
+                $('#categoryError').addClass('d-none');
+
+                if (operator === 'NOT' && !state && !category) {
+                    $('#stateSelect').addClass('form-invalid');
+                    $('#categorySelect').addClass('form-invalid');
+                    $('#stateError').text('Please select at least one of state or event category for NOT operator.').removeClass('d-none');
+                    $('#categoryError').text('Please select at least one of state or event category for NOT operator.').removeClass('d-none');
+                    isValid = false;
+                } else if (operator !== 'NOT') {
+                    if (!state) {
+                        $('#stateSelect').addClass('form-invalid');
+                        $('#stateError').removeClass('d-none');
+                        isValid = false;
+                    }
+                    if (!category) {
+                        $('#categorySelect').addClass('form-invalid');
+                        $('#categoryError').removeClass('d-none');
+                        isValid = false;
+                    }
+                }
+                return isValid;
+            }
+
+            // Sorting
+            $('.sortable').click(function() {
+                const column = $(this).data('column');
+                if (sortBy === column) {
+                    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortBy = column;
+                    sortDir = 'asc';
+                }
+                $('.sortable').removeClass('sort-asc sort-desc');
+                $(this).addClass(`sort-${sortDir}`);
+                currentPage = 0;
+                fetchActivities();
+            });
+
+            // Expandable rows
+            $('#activityTableBody').on('click', 'tr:not(.details-row):not(.group-header)', function() {
+                const id = $(this).data('id');
+                if (expandedRows.has(id)) {
+                    $(`#details-${id}`).remove();
+                    expandedRows.delete(id);
+                } else {
+                    const activity = $(this).data('activity');
+                    const detailsRow = `
+                        <tr id="details-${id}" class="details-row">
+                            <td colspan="12">
+                                <div class="p-3">
+                                    <strong>Full Description:</strong> ${activity.eventDescription || 'N/A'}<br>
+                                    <strong>Remarks:</strong> ${activity.remarks || 'N/A'}
+                                </div>
+                            </td>
+                        </tr>`;
+                    $(this).after(detailsRow);
+                    expandedRows.add(id);
+                    toggleColumnVisibilityForRow($(`#details-${id}`));
+                }
+            });
+
+            // Toggle columns
+            $('.toggle-columns-button').click(function() {
+                $('.toggle-columns-dropdown').toggleClass('show');
+            });
+            $(document).on('click', function(event) {
+                if (!$(event.target).closest('.toggle-columns-button, .toggle-columns-dropdown').length) {
+                    $('.toggle-columns-dropdown').removeClass('show');
+                }
+            });
+            $(document).on('change', '.column-toggle', function() {
+                const columnIndex = $(this).data('column');
+                toggleColumnVisibility(columnIndex, this.checked);
+                saveColumnPreferences();
+            });
+
+            // Fetch activities
+function fetchActivities(append = false) {
+                const state = $('#stateSelect').val() || '';
+                const category = $('#categorySelect').val() || '';
+                const operator = $('input[name="operator"]:checked').val();
+                const search = $('#searchInput').val();
+                const groupBy = $('#groupBy').val();
+
+                // New JS for generating SQL query
+                let sqlQuery = `SELECT * FROM activities WHERE `;
+                if (state) sqlQuery += `state = '${state}' `;
+                if (category && state) sqlQuery += `${operator} eventCategory = '${category}' `;
+                else if (category) sqlQuery += `eventCategory = '${category}' `;
+                if (search) sqlQuery += `${state || category ? operator : ''} (eventDescription LIKE '%${search}%' OR remarks LIKE '%${search}%') `;
+                if (groupBy) sqlQuery += `GROUP BY ${groupBy} `;
+                sqlQuery += `ORDER BY ${sortBy} ${sortDir}`;
+
+                // New JS for performance optimization
+                sqlQuery = optimizeQuery(sqlQuery);
+
+                // New JS for query history
+                queryHistory.unshift({
+                    sql: sqlQuery,
+                    state,
+                    eventCategory: category,
+                    operator,
+                    search,
+                    groupBy
+                });
+                if (queryHistory.length > 10) queryHistory.pop();
+                localStorage.setItem('queryHistory', JSON.stringify(queryHistory));
+                updateQueryHistory();
+                updateSyntaxDisplay(sqlQuery);
+                updateQueryPreview(sqlQuery);
+
+                $('#runQueryBtn').addClass('btn-loading').prop('disabled', true);
+                $('#loadingIndicator').removeClass('d-none');
+                $('#errorMessage').addClass('d-none');
+
+                const formData = {
+                    state,
+                    eventCategory: category,
+                    operator,
+                    search,
+                    groupBy,
+                    page: currentPage,
+                    size: config.pageSize,
+                    sortBy,
+                    sortDir
+                };
+
+                // Save query to localStorage
+                localStorage.setItem('currentQuery', JSON.stringify(formData));
+
+                // New JS for execution time tracking
+                const startTime = performance.now();
+
+                $.ajax({
+                    url: '/api/stateCategoryQuery',
+                    method: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        // New JS for execution time
+                        const endTime = performance.now();
+                        $('#timeOutput').text(`${(endTime - startTime).toFixed(2)} ms`);
+
+                        if (!append) $('#activityTableBody').empty();
+                        if (response.errorMessage) {
+                            $('#errorMessage').text(response.errorMessage).removeClass('d-none');
+                            $('#activityTableBody').append('<tr><td colspan="12" class="text-center">No activities found</td></tr>');
+                            $('#aggTableBody').empty();
+                            updateSummaryStats(0, 0, 0);
+                            totalPages = 1;
+                            $('#pageInfo').text(`Page 1 of 1`);
+                            $('#prevPage').parent().addClass('disabled');
+                            $('#nextPage').parent().addClass('disabled');
+                            return;
+                        }
+
+                        totalPages = Math.ceil(response.totalElements / config.pageSize) || 1;
+                        $('#pageInfo').text(`Page ${currentPage + 1} of ${totalPages}`);
+                        $('#prevPage').parent().toggleClass('disabled', currentPage === 0);
+                        $('#nextPage').parent().toggleClass('disabled', currentPage >= totalPages - 1);
+
+                        if (response.activities.length === 0) {
+                            if (!append) $('#activityTableBody').append('<tr><td colspan="12" class="text-center">No activities found</td></tr>');
+                            $('#aggTableBody').empty();
+                        } else {
+                            let groupedData = {};
+                            if (groupBy) {
+                                groupedData = response.activities.reduce((acc, activity) => {
+                                    const key = activity[groupBy] || 'Unknown';
+                                    if (!acc[key]) acc[key] = [];
+                                    acc[key].push(activity);
+                                    return acc;
+                                }, {});
+                            } else {
+                                groupedData = { '': response.activities };
+                            }
+
+                            Object.keys(groupedData).sort().forEach(group => {
+                                if (group && group !== 'Unknown') {
+                                    $('#activityTableBody').append(`<tr class="group-header"><td colspan="12">${groupBy.charAt(0).toUpperCase() + groupBy.slice(1)}: ${group}</td></tr>`);
+                                }
+                                groupedData[group].forEach(activity => {
+                                    const row = `
+                                        <tr data-id="${activity.id}" data-activity='${JSON.stringify(activity)}' class="${activity.numberOfParticipants > 100 ? 'highlight' : ''}">
+                                            <td class="id">${activity.id}</td>
+                                            <td class="state">${activity.state || ''}</td>
+                                            <td class="stationName">${activity.stationName || ''}</td>
+                                            <td class="activityType">${activity.activityType || ''}</td>
+                                            <td class="eventCategory">${activity.eventCategory || ''}</td>
+                                            <td class="participantCategory">${activity.participantCategory || ''}</td>
+                                            <td class="eventDescription">${(activity.eventDescription || '').substring(0, 50)}${activity.eventDescription && activity.eventDescription.length > 50 ? '...' : ''}</td>
+                                            <td class="schoolOrCollegeOrPanchayatName">${activity.schoolOrCollegeOrPanchayatName || ''}</td>
+                                            <td class="eventLocation">${activity.eventLocation || ''}</td>
+                                            <td class="eventDate">${activity.eventDate || ''}</td>
+                                            <td class="numberOfParticipants">${activity.numberOfParticipants || 0}</td>
+                                            <td class="remarks">${(activity.remarks || '').substring(0, 50)}${activity.remarks && activity.remarks.length > 50 ? '...' : ''}</td>
+                                        </tr>`;
+                                    $('#activityTableBody').append(row);
+                                    toggleColumnVisibilityForRow($('#activityTableBody tr:last'));
+                                });
+                            });
+
+                            // Render aggregation table
+                            $('#aggTableBody').empty();
+                            const aggData = response.activities.reduce((acc, a) => {
+                                const state = a.state || 'Unknown';
+                                acc[state] = acc[state] || { participants: 0, count: 0 };
+                                acc[state].participants += a.numberOfParticipants || 0;
+                                acc[state].count++;
+                                return acc;
+                            }, {});
+                            Object.entries(aggData).sort().forEach(([state, data]) => {
+                                $('#aggTableBody').append(`
+                                    <tr>
+                                        <td>${state}</td>
+                                        <td>${data.participants}</td>
+                                        <td>${data.count}</td>
+                                    </tr>
+                                `);
+                            });
+                        }
+
+                        updateSummaryStats(response.totalElements, response.uniqueStates, response.totalParticipants);
+
+                        if (operator === 'NOT' && response.totalElements > 100) {
+                            $('#notOperatorRowCount').text(response.totalElements);
+                            $('#notOperatorModal').modal('show');
+                            pendingNotQuery = true;
+                        } else {
+                            $('#notOperatorModal').modal('hide');
+                            pendingNotQuery = false;
+                        }
+                    },
+                    error: function() {
+                        // New JS for execution time on error
+                        const endTime = performance.now();
+                        $('#timeOutput').text(`${(endTime - startTime).toFixed(2)} ms`);
+
+                        $('#errorMessage').text('An error occurred while fetching activities.').removeClass('d-none');
+                        if (!append) $('#activityTableBody').append('<tr><td colspan="12" class="text-center">No activities found</td></tr>');
+                        $('#aggTableBody').empty();
+                        updateSummaryStats(0, 0, 0);
+                    },
+                    complete: function() {
+                        $('#runQueryBtn').removeClass('btn-loading').prop('disabled', false);
+                        $('#loadingIndicator').addClass('d-none');
+                    }
+                });
+            }
+
+            // Update summary stats
+            function updateSummaryStats(total, uniqueStates, totalParticipants) {
+                $('#totalActivities').text(total || 0);
+                $('#uniqueStates').text(uniqueStates || 0);
+                $('#totalParticipants').text(totalParticipants || 0);
+                $('#summaryStats').toggleClass('d-none', total === 0);
+            }
+
+            // Form submission
+  // Form submission
+            $('#queryForm').submit(function(e) {
+                e.preventDefault();
+                if (validateForm()) {
+                    currentPage = 0;
+                    pendingNotQuery = $('input[name="operator"]:checked').val() === 'NOT';
+                    if (pendingNotQuery) {
+                        // New JS for execution time in NOT operator check
+                        const startTime = performance.now();
+                        $.ajax({
+                            url: '/api/stateCategoryQuery',
+                            method: 'POST',
+                            data: {
+                                state: $('#stateSelect').val(),
+                                eventCategory: $('#categorySelect').val(),
+                                operator: $('input[name="operator"]:checked').val(),
+                                search: $('#searchInput').val(),
+                                groupBy: $('#groupBy').val(),
+                                page: 0,
+                                size: 1000,
+                                sortBy,
+                                sortDir
+                            },
+                            success: function(response) {
+                                const endTime = performance.now();
+                                $('#timeOutput').text(`${(endTime - startTime).toFixed(2)} ms`);
+                                const totalRows = response.totalElements || 0;
+                                if (totalRows > 100) {
+                                    $('#notOperatorRowCount').text(totalRows);
+                                    $('#notOperatorModal').modal('show');
+                                } else {
+                                    fetchActivities();
+                                }
+                            },
+                            error: function() {
+                                const endTime = performance.now();
+                                $('#timeOutput').text(`${(endTime - startTime).toFixed(2)} ms`);
+                                $('#errorMessage').text('Error checking NOT operator results.').removeClass('d-none');
+                            }
+                        });
+                    } else {
+                        fetchActivities();
+                    }
+                }
+            });
+            // NOT operator modal
+            $('#confirmNotOperator').click(function() {
+                $('#notOperatorModal').modal('hide');
+                if (pendingNotQuery) {
+                    currentPage = 0;
+                    fetchActivities();
+                    pendingNotQuery = false;
+                }
+            });
+
+            $('#notOperatorModal').on('hidden.bs.modal', function() {
+                if (pendingNotQuery) {
+                    $('#stateSelect').val('');
+                    $('#categorySelect').val('');
+                    $('#groupBy').val('');
+                    $('input[name="operator"][value="AND"]').prop('checked', true);
+                    localStorage.removeItem('currentQuery');
+                    currentPage = 0;
+                    fetchActivities();
+                    pendingNotQuery = false;
+                }
+            });
+
+            // Pagination navigation
+            $('#prevPage').click(function(e) {
+                e.preventDefault();
+                if (currentPage > 0) {
+                    currentPage--;
+                    fetchActivities();
+                }
+            });
+
+            $('#nextPage').click(function(e) {
+                e.preventDefault();
+                if (currentPage < totalPages - 1) {
+                    currentPage++;
+                    fetchActivities();
+                }
+            });
+
+            // Show notification
+            function showNotification(message, type) {
+                const notification = $('#notification');
+                notification.text(message).removeClass('alert-success alert-danger').addClass(`alert-${type}`).removeClass('d-none');
+                setTimeout(() => notification.addClass('d-none'), 2000);
+            }
+
+            // Toggle column visibility for a row
+            function toggleColumnVisibilityForRow(row) {
+                row.find('td, th').each(function(index) {
+                    $(this).toggleClass('hidden-column', !columnPreferences[index]);
+                });
+            }
+
+            // Group by change
+            $('#groupBy').change(function() {
+                currentPage = 0;
+                fetchActivities();
+            });
+
+            // Virtual scrolling
+            $('.table-container').scroll(function() {
+                const container = $(this);
+                if (container.scrollTop() + container.innerHeight() >= container[0].scrollHeight - 50 && currentPage < totalPages - 1) {
+                    currentPage++;
+                    fetchActivities(true);
+                }
+            });
+
+            // Keyboard navigation
+            $('#queryForm').find('input, select').on('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const inputs = $('#queryForm').find('input:visible, select:visible');
+                    const currentIndex = inputs.index(this);
+                    const nextIndex = (currentIndex + 1) % inputs.length;
+                    inputs.eq(nextIndex).focus();
+                }
+            });
+
+            $('#stateSelect, #categorySelect, #searchInput').focus(function() {
+                $(this).select();
+            });
+
+            // Server-sent events
+            const eventSource = new EventSource('/activities/updates');
+            eventSource.onmessage = function(event) {
+                const update = JSON.parse(event.data);
+                if (update.action === 'HEARTBEAT') return;
+                if ($('#stateSelect').val() && $('#categorySelect').val()) {
+                    currentPage = 0;
+                    fetchActivities();
+                }
+            };
+            eventSource.onerror = function() {
+                console.error('SSE connection error');
+                eventSource.close();
+            };
+
+            // Responsive adjustments
+            $(window).resize(function() {
+                if ($(window).width() < 768) {
+                    $('.card-header h5, .section-title').css('font-size', '1.1rem');
+                } else {
+                    $('.card-header h5').css('font-size', '1.25rem');
+                    $('.section-title').css('font-size', '1.5rem');
+                }
+            }).resize();
+
+            // Initialize
+            loadFormState();
+            loadRecentQueries();
+            if ($('#stateSelect').val() && $('#categorySelect').val()) {
+                fetchActivities();
+            }
+            if (sortBy && sortDir) {
+                $(`.sortable[data-column="${sortBy}"]`).addClass(`sort-${sortDir}`);
+            }
+        });
+        // new js code
+        document.addEventListener('DOMContentLoaded', () => {
+            const batchQueriesContainer = document.getElementById('batch-queries');
+            const addQueryButton = document.getElementById('add-query');
+            const executeBatchButton = document.getElementById('execute-batch');
+            const resetFormButton = document.getElementById('reset-form');
+            const batchResultsContainer = document.getElementById('batch-results-container');
+            const batchResultsSection = document.getElementById('batch-results');
+            let queryCount = 1;
+
+            // Initialize with one query form
+            resetBatchQueries();
+
+            // Add new query form
+            addQueryButton.addEventListener('click', () => {
+                queryCount++;
+                const queryItem = createQueryItem(queryCount);
+                batchQueriesContainer.appendChild(queryItem);
+            });
+
+            // Remove query form
+            batchQueriesContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-query')) {
+                    const queryItem = e.target.parentElement;
+                    queryItem.remove();
+                    queryCount = Math.max(1, queryCount - 1);
+                    updateQueryLabels();
+                }
+            });
+
+            // Reset form and batch queries
+            resetFormButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                resetBatchQueries();
+                batchResultsContainer.innerHTML = ''; // Clear previous batch results
+                document.getElementById('query-form').reset();
+            });
+
+            // Execute batch queries and scroll to results
+            executeBatchButton.addEventListener('click', () => {
+                const queries = collectQueries();
+                if (queries.length === 0) {
+                    alert('Please add at least one query with a state or event category.');
+                    return;
+                }
+
+                fetch('/api/batchQuery', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ queries })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.errorMessage) {
+                        alert(data.errorMessage);
+                        return;
+                    }
+                    displayBatchResults(data.results);
+                    // Scroll to batch results section
+                    batchResultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                })
+                .catch(error => {
+                    console.error('Error executing batch queries:', error);
+                    alert('Failed to execute batch queries: ' + error.message);
+                });
+            });
+
+            // Helper function to create a new query item
+            function createQueryItem(id) {
+                const queryItem = document.createElement('div');
+                queryItem.className = 'batch-query-item';
+                queryItem.dataset.queryId = id;
+                queryItem.innerHTML = `
+                    <label>Query ${id}</label>
+                    <div class="form-group">
+                        <label for="batch-state-${id}">State</label>
+                        <select id="batch-state-${id}" name="batch-state-${id}">
+                            <option value="">Select State</option>
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                            <option value="Telangana">Telangana</option>
+                            <option value="Karnataka">Karnataka</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="batch-eventCategory-${id}">Event Category</label>
+                        <select id="batch-eventCategory-${id}" name="batch-eventCategory-${id}">
+                            <option value="">Select Event Category</option>
+                            <option value="Integrity Pledge">Integrity Pledge</option>
+                            <option value="Vendors Meet">Vendors Meet</option>
+                            <option value="Elocution">Elocution</option>
+                            <option value="Debate">Debate</option>
+                            <option value="Drawing">Drawing</option>
+                            <option value="Quiz">Quiz</option>
+                            <option value="Slogan">Slogan</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="batch-operator-${id}">Operator</label>
+                        <select id="batch-operator-${id}" name="batch-operator-${id}">
+                            <option value="AND">AND</option>
+                            <option value="OR">OR</option>
+                            <option value="NOT">NOT</option>
+                        </select>
+                    </div>
+                    <button type="button" class="remove-query">Remove</button>
+                `;
+                return queryItem;
+            }
+
+            // Helper function to update query labels and IDs
+            function updateQueryLabels() {
+                const queryItems = batchQueriesContainer.querySelectorAll('.batch-query-item');
+                queryItems.forEach((item, index) => {
+                    const id = index + 1;
+                    item.dataset.queryId = id;
+                    item.querySelector('label').textContent = `Query ${id}`;
+                    const stateSelect = item.querySelector('select[name^="batch-state-"]');
+                    const categorySelect = item.querySelector('select[name^="batch-eventCategory-"]');
+                    const operatorSelect = item.querySelector('select[name^="batch-operator-"]');
+                    stateSelect.name = `batch-state-${id}`;
+                    stateSelect.id = `batch-state-${id}`;
+                    categorySelect.name = `batch-eventCategory-${id}`;
+                    categorySelect.id = `batch-eventCategory-${id}`;
+                    operatorSelect.name = `batch-operator-${id}`;
+                    operatorSelect.id = `batch-operator-${id}`;
+                });
+            }
+
+            // Helper function to reset batch queries
+            function resetBatchQueries() {
+                queryCount = 1;
+                batchQueriesContainer.innerHTML = '';
+                batchQueriesContainer.appendChild(createQueryItem(1));
+            }
+
+            // Helper function to collect queries
+            function collectQueries() {
+                const queries = [];
+                const queryItems = batchQueriesContainer.querySelectorAll('.batch-query-item');
+                queryItems.forEach((item, index) => {
+                    const id = index + 1;
+                    const state = item.querySelector(`select[name="batch-state-${id}"]`).value;
+                    const eventCategory = item.querySelector(`select[name="batch-eventCategory-${id}"]`).value;
+                    const operator = item.querySelector(`select[name="batch-operator-${id}"]`).value;
+                    if (state || eventCategory) { // Only include queries with at least one field filled
+                        queries.push({ state, eventCategory, operator });
+                    }
+                });
+                return queries;
+            }
+
+            // Helper function to display batch query results
+            function displayBatchResults(results) {
+                batchResultsContainer.innerHTML = '';
+                results.forEach((result, index) => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'batch-result-item';
+                    const query = result.query;
+                    resultItem.innerHTML = `
+                        <h3>Query ${index + 1}: ${query.state || 'Any State'} / ${query.eventCategory || 'Any Category'} (${query.operator})</h3>
+                        <div class="batch-result-content show">
+                            <table class="batch-results-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>State</th>
+                                        <th>Event Category</th>
+                                        <th>Number of Participants</th>
+                                        <th>Event Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${result.activities.length > 0 ? result.activities.map(activity => `
+                                        <tr>
+                                            <td>${activity.id}</td>
+                                            <td>${activity.state || 'N/A'}</td>
+                                            <td>${activity.eventCategory || 'N/A'}</td>
+                                            <td>${activity.numberOfParticipants}</td>
+                                            <td>${activity.eventDate || 'N/A'}</td>
+                                        </tr>
+                                    `).join('') : '<tr><td colspan="5">No activities found.</td></tr>'}
+                                </tbody>
+                            </table>
+                            <div class="batch-result-stats">
+                                <p>Total Activities: ${result.totalActivities}</p>
+                                <p>Total Participants: ${result.totalParticipants}</p>
+                                <p>Execution Time: ${result.executionTimeMs} ms</p>
+                            </div>
+                        </div>
+                    `;
+                    batchResultsContainer.appendChild(resultItem);
+                });
+
+                // Add click event for collapsible headers
+                batchResultsContainer.querySelectorAll('h3').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const content = header.nextElementSibling;
+                        content.classList.toggle('show');
+                    });
+                });
+            }
+        });
+        // Visual Query Builder
+        const queryBuilder = document.getElementById('conditions');
+        const addConditionBtn = document.getElementById('addCondition');
+        const addGroupBtn = document.getElementById('addGroup');
+        let conditionCount = 0;
+
+        function createCondition() {
+            conditionCount++;
+            const conditionDiv = document.createElement('div');
+            conditionDiv.className = 'condition border p-2 mb-2 bg-white dark:bg-gray-600 rounded flex items-center space-x-2';
+            conditionDiv.dataset.id = `condition-${conditionCount}`;
+            conditionDiv.innerHTML = `
+                <select class="field p-1 border rounded dark:bg-gray-700 dark:text-gray-200">
+                    <option value="state">State</option>
+                    <option value="eventCategory">Event Category</option>
+                    <option value="numberOfParticipants">Number of Participants</option>
+                    <option value="eventDate">Event Date</option>
+                </select>
+                <select class="operator p-1 border rounded dark:bg-gray-700 dark:text-gray-200">
+                    <option value="=">=</option>
+                    <option value="!=">!=</option>
+                    <option value="<"><</option>
+                    <option value=">">></option>
+                    <option value="<="><=</option>
+                    <option value=">=">>=</option>
+                </select>
+                <input type="text" class="value p-1 border rounded dark:bg-gray-700 dark:text-gray-200" placeholder="Value">
+                <select class="logical p-1 border rounded dark:bg-gray-700 dark:text-gray-200">
+                    <option value="AND">AND</option>
+                    <option value="OR">OR</option>
+                    <option value="NOT">NOT</option>
+                </select>
+                <button class="removeCondition px-2 py-1 bg-red-600 text-white rounded text-sm">Remove</button>
+            `;
+            queryBuilder.appendChild(conditionDiv);
+
+            // Handle remove condition
+            conditionDiv.querySelector('.removeCondition').addEventListener('click', () => {
+                conditionDiv.remove();
+                updateQueryPreview();
+            });
+
+            // Update query preview on change
+            conditionDiv.querySelectorAll('.field, .operator, .value, .logical').forEach(input => {
+                input.addEventListener('change', updateQueryPreview);
+            });
+        }
+
+        function createGroup() {
+            conditionCount++;
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'group border p-4 mb-2 bg-gray-100 dark:bg-gray-500 rounded';
+            groupDiv.dataset.id = `group-${conditionCount}`;
+            groupDiv.innerHTML = `
+                <div class="flex justify-between mb-2">
+                    <span class="font-medium text-gray-800 dark:text-gray-200">Group</span>
+                    <button class="removeGroup px-2 py-1 bg-red-600 text-white rounded text-sm">Remove Group</button>
+                </div>
+                <div class="conditions space-y-2"></div>
+                <button class="addConditionInGroup px-2 py-1 bg-blue-600 text-white rounded text-sm mt-2">Add Condition</button>
+            `;
+            queryBuilder.appendChild(groupDiv);
+
+            // Handle remove group
+            groupDiv.querySelector('.removeGroup').addEventListener('click', () => {
+                groupDiv.remove();
+                updateQueryPreview();
+            });
+
+            // Handle add condition in group
+            groupDiv.querySelector('.addConditionInGroup').addEventListener('click', () => {
+                conditionCount++;
+                const conditionDiv = document.createElement('div');
+                conditionDiv.className = 'condition border p-2 mb-2 bg-white dark:bg-gray-600 rounded flex items-center space-x-2';
+                conditionDiv.dataset.id = `condition-${conditionCount}`;
+                conditionDiv.innerHTML = `
+                    <select class="field p-1 border rounded dark:bg-gray-700 dark:text-gray-200">
+                        <option value="state">State</option>
+                        <option value="eventCategory">Event Category</option>
+                        <option value="numberOfParticipants">Number of Participants</option>
+                        <option value="eventDate">Event Date</option>
+                    </select>
+                    <select class="operator p-1 border rounded dark:bg-gray-700 dark:text-gray-200">
+                        <option value="=">=</option>
+                        <option value="!=">!=</option>
+                        <option value="<"><</option>
+                        <option value=">">></option>
+                        <option value="<="><=</option>
+                        <option value=">=">>=</option>
+                    </select>
+                    <input type="text" class="value p-1 border rounded dark:bg-gray-700 dark:text-gray-200" placeholder="Value">
+                    <select class="logical p-1 border rounded dark:bg-gray-700 dark:text-gray-200">
+                        <option value="AND">AND</option>
+                        <option value="OR">OR</option>
+                        <option value="NOT">NOT</option>
+                    </select>
+                    <button class="removeCondition px-2 py-1 bg-red-600 text-white rounded text-sm">Remove</button>
+                `;
+                groupDiv.querySelector('.conditions').appendChild(conditionDiv);
+
+                // Handle remove condition
+                conditionDiv.querySelector('.removeCondition').addEventListener('click', () => {
+                    conditionDiv.remove();
+                    updateQueryPreview();
+                });
+
+                // Update query preview on change
+                conditionDiv.querySelectorAll('.field, .operator, .value, .logical').forEach(input => {
+                    input.addEventListener('change', updateQueryPreview);
+                });
+            });
+
+            // Make conditions in group sortable
+            new Sortable(groupDiv.querySelector('.conditions'), {
+                animation: 150,
+                handle: '.condition',
+                onEnd: updateQueryPreview
+            });
+
+            updateQueryPreview();
+        }
+
+        addConditionBtn.addEventListener('click', createCondition);
+        addGroupBtn.addEventListener('click', createGroup);
+
+        // Make top-level conditions sortable
+        new Sortable(queryBuilder, {
+            animation: 150,
+            handle: '.condition, .group',
+            onEnd: updateQueryPreview
+        });
+
+        function updateQueryPreview() {
+            const conditions = [];
+            const collectConditions = (container, parent = null) => {
+                const children = container.children;
+                for (let child of children) {
+                    if (child.classList.contains('condition')) {
+                        const field = child.querySelector('.field').value;
+                        const operator = child.querySelector('.operator').value;
+                        const value = child.querySelector('.value').value;
+                        const logical = child.querySelector('.logical').value;
+                        conditions.push({ field, operator, value, logical, parent });
+                    } else if (child.classList.contains('group')) {
+                        const groupId = child.dataset.id;
+                        collectConditions(child.querySelector('.conditions'), groupId);
+                    }
+                }
+            };
+            collectConditions(queryBuilder);
+            document.getElementById('queryPreview').innerHTML = JSON.stringify(conditions, null, 2);
+            document.getElementById('querySyntax').innerHTML = conditions.map(c => 
+                `${c.field} ${c.operator} ${c.value} ${c.logical}`).join(' ');
+        }
+
+        // Run Query
+        document.getElementById('runQuery').addEventListener('click', () => {
+            const conditions = [];
+            const collectConditions = (container, parent = null) => {
+                const children = container.children;
+                for (let child of children) {
+                    if (child.classList.contains('condition')) {
+                        const field = child.querySelector('.field').value;
+                        const operator = child.querySelector('.operator').value;
+                        const value = child.querySelector('.value').value;
+                        const logical = child.querySelector('.logical').value;
+                        if (value) conditions.push({ field, operator, value, logical });
+                    } else if (child.classList.contains('group')) {
+                        const groupId = child.dataset.id;
+                        collectConditions(child.querySelector('.conditions'), groupId);
+                    }
+                }
+            };
+            collectConditions(queryBuilder);
+
+            const state = document.getElementById('state').value;
+            const eventCategory = document.getElementById('eventCategory').value;
+            const operator = document.getElementById('operator').value;
+            const groupBy = document.getElementById('groupBy').value;
+
+            // Simulate AJAX call to /api/dateRangeQuery
+            const payload = {
+                startDate: '2024-10-28',
+                endDate: '2024-11-03',
+                state,
+                eventCategory,
+                filterOperator: operator,
+                conditions: JSON.stringify(conditions)
+            };
+
+            // Placeholder for AJAX call
+            console.log('Query Payload:', payload);
+            // Implement actual AJAX call to backend as needed
+        });
+
+        // Initial condition
+        createCondition();
+        </script>
+</body>
+</html>
