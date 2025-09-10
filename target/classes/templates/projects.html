@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POWERGRID Projects | Next-Gen Energy Infrastructure</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #054a91;
+            --primary-dark: #03346e;
+            --primary-light: #0c63c9;
+            --secondary: #f17300;
+            --secondary-glow: #ff9e45;
+            --light: #f5f7fa;
+            --dark: #1a1a1a;
+            --gray: #6c757d;
+            --success: #00c853;
+            --electric-blue: #00a8ff;
+            --electric-purple: #8929e6;
+            --grid-line: rgba(0, 168, 255, 0.15);
+            
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.15);
+            --glow: 0 0 15px rgba(241, 115, 0, 0.5);
+            
+            --transition-fast: 0.3s ease;
+            --transition-medium: 0.5s ease;
+            --transition-slow: 0.8s ease;
+            
+            --container-width: 1320px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--dark);
+            color: var(--light);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(26, 26, 26, 0.95), rgba(10, 15, 25, 0.95)),
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,0 L100,100 M100,0 L0,100' stroke='%2300549190' stroke-width='1'/%3E%3C/svg%3E");
+        }
+
+        .grid-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.15;
+            background-image: 
+                linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            background: var(--electric-blue);
+            border-radius: 50%;
+            opacity: 0;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.3;
+            }
+            90% {
+                opacity: 0.2;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(20vw);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            max-width: var(--container-width);
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header & Navigation */
+        header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
+            color: #fff;
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            color: var(--secondary);
+            filter: drop-shadow(0 0 5px var(--secondary-glow));
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo-text span {
+            color: var(--secondary);
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.1rem;
+            transition: var(--transition-fast);
+            position: relative;
+            padding: 5px 0;
+        }
+
+        nav a:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--secondary);
+            transition: var(--transition-fast);
+        }
+
+        nav a:hover:after {
+            width: 100%;
+        }
+
+        nav a:hover {
+            color: var(--secondary);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 80px 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(241, 115, 0, 0.15);
+            color: var(--secondary);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 25px;
+            border: 1px solid rgba(241, 115, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 25px;
+            background: linear-gradient(to right, #fff, var(--secondary-glow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            max-width: 600px;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition-fast);
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--secondary);
+            color: #fff;
+            box-shadow: var(--glow);
+        }
+
+        .btn-primary:hover {
+            background: #ff8c00;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(241, 115, 0, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-3px);
+        }
+
+        /* Section Styling */
+        .section {
+            margin: 100px 0;
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title:after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--secondary);
+            border-radius: 2px;
+        }
+
+        .section-subtitle {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+            opacity: 0.8;
+        }
+
+        /* Card Components */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .card {
+            background: linear-gradient(145deg, rgba(30, 35, 45, 0.8), rgba(20, 25, 35, 0.8));
+            border-radius: 15px;
+            padding: 30px;
+            transition: var(--transition-medium);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: var(--shadow-md);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, var(--primary-light), var(--secondary));
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(241, 115, 0, 0.2);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .card-content {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .card-footer {
+            margin-top: auto;
+        }
+
+        .card-link {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition-fast);
+        }
+
+        .card-link:hover {
+            gap: 12px;
+            color: var(--secondary-glow);
+        }
+
+        /* Stats Section */
+        .stats-section {
+            background: linear-gradient(to right, var(--primary-dark), var(--primary));
+            padding: 80px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: var(--transition-fast);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+
+        .stat-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #fff, var(--secondary-glow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Timeline/Process */
+        .timeline {
+            position: relative;
+            max-width: 1000px;
+            margin: 60px auto;
+        }
+
+        .timeline:before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+
+        .timeline-item {
+            width: 50%;
+            padding: 30px 40px;
+            position: relative;
+        }
+
+        .timeline-item:nth-child(odd) {
+            left: 0;
+            padding-right: 70px;
+        }
+
+        .timeline-item:nth-child(even) {
+            left: 50%;
+            padding-left: 70px;
+        }
+
+        .timeline-content {
+            background: linear-gradient(145deg, rgba(30, 35, 45, 0.9), rgba(20, 25, 35, 0.9));
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .timeline-content:after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 20px;
+            height: 20px;
+            background: var(--secondary);
+            border-radius: 50%;
+            box-shadow: 0 0 0 8px rgba(241, 115, 0, 0.2), 0 0 15px var(--secondary);
+        }
+
+        .timeline-item:nth-child(odd) .timeline-content:after {
+            right: -60px;
+            transform: translateY(-50%);
+        }
+
+        .timeline-item:nth-child(even) .timeline-content:after {
+            left: -60px;
+            transform: translateY(-50%);
+        }
+
+        .timeline-date {
+            display: inline-block;
+            background: var(--secondary);
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .timeline-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(to right, #031a33, var(--primary-dark));
+            padding: 80px 0 30px;
+            position: relative;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .footer-col h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.4rem;
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .footer-col h3:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: var(--secondary);
+            border-radius: 2px;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-links a:hover {
+            color: var(--secondary);
+            gap: 12px;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .hero-title {
+                font-size: 2.8rem;
+            }
+            
+            .timeline:before {
+                left: 30px;
+            }
+            
+            .timeline-item {
+                width: 100%;
+                padding-left: 80px;
+                padding-right: 0;
+            }
+            
+            .timeline-item:nth-child(even) {
+                left: 0;
+                padding-left: 80px;
+            }
+            
+            .timeline-item:nth-child(odd) .timeline-content:after,
+            .timeline-item:nth-child(even) .timeline-content:after {
+                left: 30px;
+                right: auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            nav ul {
+                gap: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .hero-title {
+                font-size: 2.3rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .hero-cta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .logo-text {
+                font-size: 1.5rem;
+            }
+            
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .stat-number {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-background"></div>
+    <div class="particles-container" id="particles"></div>
+
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-bolt logo-icon"></i>
+                    <div class="logo-text">POWER<span>GRID</span></div>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#overview">Overview</a></li>
+                        <li><a href="#projects">Projects</a></li>
+                        <li><a href="#impact">Impact</a></li>
+                        <li><a href="#technology">Technology</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                         <li><a href="/">Home</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-star"></i> Leading India's Energy Revolution
+                </div>
+                <h1 class="hero-title">Transforming Energy Infrastructure with Cutting-Edge Technology</h1>
+                <p class="hero-subtitle">POWERGRID is at the forefront of developing next-generation transmission systems, integrating renewable energy, and building a sustainable power infrastructure for India's future.</p>
+                <div class="hero-cta">
+                    <a href="#projects" class="btn btn-primary">
+                        <i class="fas fa-bolt"></i> Explore Projects
+                    </a>
+                    <a href="#technology" class="btn btn-secondary">
+                        <i class="fas fa-microchip"></i> Our Technologies
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="overview">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2 class="section-title">Strategic Overview</h2>
+                <p class="section-subtitle">POWERGRID's pioneering initiatives are shaping the future of India's energy landscape through innovation and strategic expansion.</p>
+            </div>
+            
+            <div class="card-grid">
+                <div class="card fade-in">
+                    <i class="fas fa-bolt card-icon"></i>
+                    <h3 class="card-title">UHVAC Transmission</h3>
+                    <p class="card-content">Development of 1200kV technology to transmit large quantities of power efficiently, reducing transmission losses and the need for land.</p>
+                    <div class="card-footer">
+                        <a href="#" class="card-link">
+                            Learn more <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card fade-in">
+                    <i class="fas fa-digital-tachograph card-icon"></i>
+                    <h3 class="card-title">Digital Substations</h3>
+                    <p class="card-content">Global leader in implementing full digital substations to improve grid control, monitoring, and operational efficiency.</p>
+                    <div class="card-footer">
+                        <a href="#" class="card-link">
+                            Learn more <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card fade-in">
+                    <i class="fas fa-solar-panel card-icon"></i>
+                    <h3 class="card-title">Renewable Integration</h3>
+                    <p class="card-content">Developing specialized infrastructure to evacuate and distribute renewable energy from solar and wind sources across India.</p>
+                    <div class="card-footer">
+                        <a href="#" class="card-link">
+                            Learn more <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card fade-in">
+                    <i class="fas fa-bolt stat-icon"></i>
+                    <div class="stat-number" id="stat1">0</div>
+                    <div class="stat-label">UHVAC Projects</div>
+                </div>
+                
+                <div class="stat-card fade-in">
+                    <i class="fas fa-subway stat-icon"></i>
+                    <div class="stat-number" id="stat2">0</div>
+                    <div class="stat-label">Substations</div>
+                </div>
+                
+                <div class="stat-card fade-in">
+                    <i class="fas fa-sun stat-icon"></i>
+                    <div class="stat-number" id="stat3">0</div>
+                    <div class="stat-label">Renewable Projects</div>
+                </div>
+                
+                <div class="stat-card fade-in">
+                    <i class="fas fa-map-marked-alt stat-icon"></i>
+                    <div class="stat-number" id="stat4">0</div>
+                    <div class="stat-label">Circuit Kilometers</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="projects">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2 class="section-title">Key Project Areas</h2>
+                <p class="section-subtitle">Our diverse portfolio of projects addresses the complete spectrum of energy transmission and distribution challenges.</p>
+            </div>
+            
+            <div class="timeline">
+                <div class="timeline-item fade-in">
+                    <div class="timeline-content">
+                        <span class="timeline-date">2023-2025</span>
+                        <h3 class="timeline-title">Western Region Expansion</h3>
+                        <p>Strengthening the grid to support integration of solar energy from Rajasthan and other regions with enhanced transmission capabilities.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item fade-in">
+                    <div class="timeline-content">
+                        <span class="timeline-date">2022-2024</span>
+                        <h3 class="timeline-title">Digital Transformation</h3>
+                        <p>Implementation of AI-driven monitoring systems, IoT sensors, and predictive maintenance technologies across the national grid.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item fade-in">
+                    <div class="timeline-content">
+                        <span class="timeline-date">2021-2023</span>
+                        <h3 class="timeline-title">BESS Integration</h3>
+                        <p>Deployment of Battery Energy Storage Systems in strategic locations to stabilize grid operations and support renewable integration.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item fade-in">
+                    <div class="timeline-content">
+                        <span class="timeline-date">2020-2022</span>
+                        <h3 class="timeline-title">National Grid Synchronization</h3>
+                        <p>Completion of One Nation-One Grid-One Frequency system, unifying regional grids into a single operational network.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="technology">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2 class="section-title">Technology & Innovation</h2>
+                <p class="section-subtitle">POWERGRID's R&D initiatives are driving the evolution of smart grid technologies and sustainable energy solutions.</p>
+            </div>
+            
+            <div class="card-grid">
+                <div class="card fade-in">
+                    <i class="fas fa-life-ring card-icon"></i>
+                    <h3 class="card-title">Asset Life Management</h3>
+                    <p class="card-content">Advanced systems like PALMS (POWERGRID Asset Life Management System) for monitoring and managing transmission assets.</p>
+                </div>
+                
+                <div class="card fade-in">
+                    <i class="fas fa-satellite card-icon"></i>
+                    <h3 class="card-title">Vegetation Management</h3>
+                    <p class="card-content">Using satellite imagery and AI for predictive vegetation management to prevent transmission line issues.</p>
+                </div>
+                
+                <div class="card fade-in">
+                    <i class="fas fa-brain card-icon"></i>
+                    <h3 class="card-title">AI & Analytics</h3>
+                    <p class="card-content">Implementation of artificial intelligence for fault prediction, load forecasting, and grid optimization.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h3>POWERGRID</h3>
+                    <p>Building the nation's energy backbone through innovation, reliability, and sustainable practices.</p>
+                </div>
+                
+                <div class="footer-col">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="#overview"><i class="fas fa-chevron-right"></i> Overview</a></li>
+                        <li><a href="#projects"><i class="fas fa-chevron-right"></i> Projects</a></li>
+                        <li><a href="#technology"><i class="fas fa-chevron-right"></i> Technology</a></li>
+                        <li><a href="#impact"><i class="fas fa-chevron-right"></i> Impact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h3>Contact Info</h3>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-map-marker-alt"></i> Corporate Center, Gurugram</li>
+                        <li><i class="fas fa-phone"></i> +91-124-257-1700</li>
+                        <li><i class="fas fa-envelope"></i> info@powergrid.in</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 POWERGRID Corporation of India. All rights reserved. | Last updated: 08:49 PM IST, September 03, 2025</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // Random properties
+                const size = Math.random() * 5 + 2;
+                const posX = Math.random() * 100;
+                const posY = Math.random() * 100;
+                const delay = Math.random() * 15;
+                const duration = Math.random() * 10 + 15;
+                const color = `hsl(${Math.random() * 60 + 190}, 100%, 70%)`;
+                
+                // Apply styles
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${posX}vw`;
+                particle.style.top = `${posY}vh`;
+                particle.style.animationDelay = `${delay}s`;
+                particle.style.animationDuration = `${duration}s`;
+                particle.style.background = color;
+                
+                container.appendChild(particle);
+            }
+        }
+        
+        // Animate stats counting
+        function animateStats() {
+            const stat1 = document.getElementById('stat1');
+            const stat2 = document.getElementById('stat2');
+            const stat3 = document.getElementById('stat3');
+            const stat4 = document.getElementById('stat4');
+            
+            const targetValues = [18, 180, 42, 175000];
+            const elements = [stat1, stat2, stat3, stat4];
+            const duration = 3000;
+            const interval = 50;
+            
+            elements.forEach((el, index) => {
+                const steps = duration / interval;
+                const increment = targetValues[index] / steps;
+                let current = 0;
+                
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= targetValues[index]) {
+                        current = targetValues[index];
+                        clearInterval(timer);
+                    }
+                    
+                    if (index === 3) {
+                        // Format with commas for circuit kilometers
+                        el.textContent = Math.round(current).toLocaleString();
+                    } else {
+                        el.textContent = Math.round(current);
+                    }
+                }, interval);
+            });
+        }
+        
+        // Fade in elements on scroll
+        function fadeInOnScroll() {
+            const elements = document.querySelectorAll('.fade-in');
+            
+            elements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < window.innerHeight - elementVisible) {
+                    element.classList.add('visible');
+                }
+            });
+        }
+        
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', function() {
+            createParticles();
+            
+            window.addEventListener('scroll', fadeInOnScroll);
+            fadeInOnScroll(); // Check on load
+            
+            // Animate stats when they come into view
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        animateStats();
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            observer.observe(document.querySelector('.stats-section'));
+        });
+    </script>
+</body>
+</html>

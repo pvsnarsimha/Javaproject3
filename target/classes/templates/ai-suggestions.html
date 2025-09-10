@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="AI-Powered Suggestions for Activity Management">
+    <title>AI Suggestions - Activity Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <style type="text/css">@font-face {font-family:Poppins;font-style:normal;font-weight:300;src:url(/cf-fonts/s/poppins/5.0.11/devanagari/300/normal.woff2);unicode-range:U+0900-097F,U+1CD0-1CF9,U+200C-200D,U+20A8,U+20B9,U+25CC,U+A830-A839,U+A8E0-A8FF;font-display:swap;}@font-face {font-family:Poppins;font-style:normal;font-weight:300;src:url(/cf-fonts/s/poppins/5.0.11/latin/300/normal.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:Poppins;font-style:normal;font-weight:300;src:url(/cf-fonts/s/poppins/5.0.11/latin-ext/300/normal.woff2);unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20CF,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:Poppins;font-style:normal;font-weight:400;src:url(/cf-fonts/s/poppins/5.0.11/latin/400/normal.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:Poppins;font-style:normal;font-weight:400;src:url(/cf-fonts/s/poppins/5.0.11/devanagari/400/normal.woff2);unicode-range:U+0900-097F,U+1CD0-1CF9,U+200C-200D,U+20A8,U+20B9,U+25CC,U+A830-A839,U+A8E0-A8FF;font-display:swap;}@font-face {font-family:Poppins;font-style:normal;font-weight:400;src:url(/cf-fonts/s/poppins/5.0.11/latin-ext/400/normal.woff2);unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20CF,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:Poppins;font-style:normal;font-weight:600;src:url(/cf-fonts/s/poppins/5.0.11/latin/600/normal.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:Poppins;font-style:normal;font-weight:600;src:url(/cf-fonts/s/poppins/5.0.11/devanagari/600/normal.woff2);unicode-range:U+0900-097F,U+1CD0-1CF9,U+200C-200D,U+20A8,U+20B9,U+25CC,U+A830-A839,U+A8E0-A8FF;font-display:swap;}@font-face {font-family:Poppins;font-style:normal;font-weight:600;src:url(/cf-fonts/s/poppins/5.0.11/latin-ext/600/normal.woff2);unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20CF,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:Poppins;font-style:normal;font-weight:700;src:url(/cf-fonts/s/poppins/5.0.11/latin-ext/700/normal.woff2);unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20CF,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:Poppins;font-style:normal;font-weight:700;src:url(/cf-fonts/s/poppins/5.0.11/devanagari/700/normal.woff2);unicode-range:U+0900-097F,U+1CD0-1CF9,U+200C-200D,U+20A8,U+20B9,U+25CC,U+A830-A839,U+A8E0-A8FF;font-display:swap;}@font-face {font-family:Poppins;font-style:normal;font-weight:700;src:url(/cf-fonts/s/poppins/5.0.11/latin/700/normal.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}</style>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #2c3e50;
+            --card-bg: #ffffff;
+            --primary-color: #6f42c1;
+            --secondary-color: #28a745;
+            --error-color: #dc3545;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --card-bg: #2c2c2c;
+            --primary-color: #a78bfa;
+            --secondary-color: #20c997;
+            --error-color: #f06565;
+            --shadow: 0 8px 32px rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-color), #e9ecef);
+            color: var(--text-color);
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            transition: var(--transition);
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(90deg, var(--primary-color), #4b0082);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .container {
+            max-width: 1200px;
+            padding: 2rem;
+            margin: 0 auto;
+        }
+
+        .back-btn {
+            background: var(--primary-color);
+            color: #ffffff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #5a32a3;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .back-btn i {
+            font-size: 1.2rem;
+        }
+
+        .ai-suggestion-report {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .ai-suggestion-report h3 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .ai-suggestion-report p {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-suggestion-report strong {
+            color: var(--primary-color);
+            font-weight: 600;
+            min-width: 150px;
+        }
+
+        .ai-error {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid var(--error-color);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--error-color);
+            animation: shake 0.5s ease;
+        }
+
+        .analytics-section {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            animation: fadeInUp 1.2s ease-out;
+        }
+
+        .analytics-section h3 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        #analyticsChart {
+            width: 100%;
+            height: 600px;
+            max-height: 600px;
+            margin: 0 auto;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--primary-color);
+            color: #ffffff;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            background: #5a32a3;
+            transform: scale(1.1);
+        }
+
+        .natural-language-section {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-top: 2rem;
+            animation: fadeInUp 1.2s ease-out;
+        }
+
+        .natural-language-section h3 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            .container {
+                padding: 1rem;
+            }
+            .ai-suggestion-report, .analytics-section, .natural-language-section {
+                padding: 1.5rem;
+            }
+            .ai-suggestion-report p {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
+            }
+            .ai-suggestion-report strong {
+                min-width: auto;
+            }
+            #analyticsChart {
+                height: 400px;
+                max-height: 400px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            .back-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            #analyticsChart {
+                height: 300px;
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" aria-label="Toggle theme"><i class="fas fa-moon"></i></button>
+
+    <div class="header">
+        <h1>AI-Powered Suggestions</h1>
+    </div>
+
+    <div class="container">
+        <a href="/activity" class="btn back-btn mb-4"><i class="fas fa-arrow-left"></i> Back to Activities</a>
+
+        <div id="error-message" class="ai-error d-none"></div>
+
+        <div class="ai-suggestion-report">
+            <h3>AI Suggestions Report</h3>
+            <p><strong><i class="fas fa-calendar-alt"></i> Suggested Event Date:</strong> <span id="event-date">Loading...</span></p>
+            <p><strong><i class="fas fa-users"></i> Predicted Participants:</strong> <span id="participants">Loading...</span></p>
+            <p><strong><i class="fas fa-lightbulb"></i> Reason:</strong> <span id="reason">Loading...</span></p>
+        </div>
+
+        <div class="analytics-section">
+            <h3>Activity Trends</h3>
+            <canvas id="analyticsChart"></canvas>
+        </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+        // Theme Toggle
+        const themeToggle = document.querySelector('.theme-toggle');
+        themeToggle.addEventListener('click', () => {
+            const theme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            themeToggle.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        });
+
+        // Initialize theme
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+
+        // Dynamic Data Population
+        async function loadSuggestions() {
+            try {
+                const response = await fetch('/api/aiSuggestions');
+                const data = await response.json();
+                const errorMessage = document.getElementById('error-message');
+                if (data.errorMessage) {
+                    errorMessage.classList.remove('d-none');
+                    errorMessage.textContent = data.errorMessage;
+                    document.querySelector('.ai-suggestion-report').classList.add('d-none');
+                    return;
+                }
+                errorMessage.classList.add('d-none');
+                document.querySelector('.ai-suggestion-report').classList.remove('d-none');
+                document.getElementById('event-date').textContent = data.suggestedDate || 'N/A';
+                document.getElementById('participants').textContent = data.predictedParticipants || '0';
+                document.getElementById('reason').textContent = data.reason || 'No reason provided.';
+            } catch (error) {
+                document.getElementById('error-message').classList.remove('d-none');
+                document.getElementById('error-message').textContent = 'Failed to load suggestions: ' + error.message;
+                document.querySelector('.ai-suggestion-report').classList.add('d-none');
+            }
+        }
+
+        // Interactive Chart for Activity Trends
+        async function loadTrendsChart() {
+            try {
+                const response = await fetch('/api/dashboardStats?startDate=2024-10-28&endDate=2024-11-03');
+                const data = await response.json();
+                const dateCounts = data.dateCounts || {};
+                const participantCounts = data.participantCounts || {};
+                const labels = Object.keys(dateCounts).sort();
+                const participantData = labels.map(date => participantCounts[date] || 0);
+                const eventData = labels.map(date => dateCounts[date] || 0);
+
+                // Calculate suggested max for y-axes
+                const maxParticipants = Math.max(...participantData, 100);
+                const maxEvents = Math.max(...eventData, 10);
+
+                const ctx = document.getElementById('analyticsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Number of Participants',
+                                data: participantData,
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                fill: true,
+                                tension: 0.5,
+                                pointStyle: 'circle',
+                                pointRadius: 6,
+                                pointHoverRadius: 10,
+                                borderWidth: 3,
+                                yAxisID: 'y-participants'
+                            },
+                            {
+                                label: 'Number of Events',
+                                data: eventData,
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                fill: true,
+                                tension: 0.5,
+                                pointStyle: 'circle',
+                                pointRadius: 6,
+                                pointHoverRadius: 10,
+                                borderWidth: 3,
+                                yAxisID: 'y-events'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: { font: { size: 16, family: 'Poppins' }, color: 'var(--text-color)' }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Activity Trends Over Time',
+                                font: { size: 22, family: 'Poppins', weight: '600' },
+                                color: 'var(--text-color)',
+                                padding: { top: 15, bottom: 25 }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleFont: { size: 16, family: 'Poppins' },
+                                bodyFont: { size: 14, family: 'Poppins' },
+                                callbacks: {
+                                    label: (context) => `${context.dataset.label}: ${context.raw}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Date', font: { size: 16, family: 'Poppins' }, color: 'var(--text-color)' },
+                                grid: { display: false },
+                                ticks: { font: { size: 14 } }
+                            },
+                            'y-participants': {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                beginAtZero: true,
+                                suggestedMax: maxParticipants * 1.2, // Add 20% padding
+                                title: { display: true, text: 'Participants', font: { size: 16, family: 'Poppins' }, color: 'var(--text-color)' },
+                                grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                                ticks: { font: { size: 14 } }
+                            },
+                            'y-events': {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                beginAtZero: true,
+                                suggestedMax: maxEvents * 1.2, // Add 20% padding
+                                title: { display: true, text: 'Events', font: { size: 16, family: 'Poppins' }, color: 'var(--text-color)' },
+                                grid: { display: false }, // Avoid overlapping grids
+                                ticks: { font: { size: 14 } }
+                            }
+                        },
+                        animation: {
+                            duration: 1000,
+                            easing: 'easeOutQuart'
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to load trends:', error);
+            }
+        }
+
+      
+        // Initialize on page load
+        window.onload = () => {
+            loadSuggestions();
+            loadTrendsChart();
+        };
+    </script>
+</body>
+</html>
